@@ -1,11 +1,8 @@
 from datetime import datetime
 from typing import List
-
 import pytz
-from fastapi import (APIRouter, Depends, HTTPException, Response, responses,
-                     status)
+from fastapi import (APIRouter, Depends, HTTPException, Response, responses, status)
 from sqlalchemy.orm.session import Session
-
 from app.config.database import SessionLocal, engine
 from app.models.index import DbUser
 from app.oprations.index import create_new_wallet
