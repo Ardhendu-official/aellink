@@ -8,7 +8,7 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.models.index import DbUser
-from app.oprations.index import create_new_wallet, import_wallet
+from app.oprations.index import create_new_wallet
 from app.schemas.index import ImportWallet, User
 
 user = APIRouter()
@@ -31,9 +31,9 @@ def createWallet(request: User, db: Session = Depends(get_db)):
     return create_new_wallet(request,db)
     
 
-@user.post('/tron/wallet/', status_code=status.HTTP_201_CREATED)
-def importWallet(request: ImportWallet, db: Session = Depends(get_db)):
-    return import_wallet(request, db ) # type: ignore
+# @user.post('/tron/wallet/', status_code=status.HTTP_201_CREATED)
+# def importWallet(request: ImportWallet, db: Session = Depends(get_db)):
+#     return import_wallet(request, db ) # type: ignore
 
 # @customer.post('/customer/auth', status_code=status.HTTP_201_CREATED)
 # def createCustomer(request: ReqCustomer, db: Session = Depends(get_db)):
