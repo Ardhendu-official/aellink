@@ -9,7 +9,6 @@ from typing import List
 import pytz
 import requests
 from fastapi import APIRouter, Depends, HTTPException, status
-from pymysql import NULL
 from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
@@ -25,6 +24,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 def create_new_wallet(request: User, db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_hash_id == request.user_hash_id).first()
