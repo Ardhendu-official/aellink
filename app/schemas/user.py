@@ -8,13 +8,17 @@ from pydantic import BaseModel
 class User(BaseModel):
     user_wallet_name: str
     user_password: str
+    user_hash_id: Optional[str] = None
 
 class ImportWallet(BaseModel):
     user_wallet_name: str
-    mnemonic_key: str
-    user_hash_id: str
+    m_key_or_p_key: str
+    user_hash_id: Optional[str] = None
     user_password: str
 
+class WalletDetails(BaseModel):
+    user_hash_id: Optional[str] = None
+    user_address: str
 
 
 

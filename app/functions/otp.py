@@ -1,6 +1,6 @@
 import random
-from pymysql import NULL
 
+from pymysql import NULL
 from sqlalchemy import false, true
 
 

@@ -8,8 +8,10 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.models.index import DbUser
-from app.oprations.index import create_new_wallet, import_wallet
-from app.schemas.index import ImportWallet, User
+from app.oprations.index import (create_new_wallet, details_wallet,
+                                 details_wallet_bal, import_wallet,
+                                 show_user_wallet)
+from app.schemas.index import ImportWallet, User, WalletDetails
 
 user = APIRouter()
 
@@ -26,23 +28,27 @@ def get_db():
 # def allCustomer(db: Session = Depends(get_db)):
 #     return show_all_customer(db)
 
-@user.post('/tron/wallet', status_code=status.HTTP_201_CREATED)
+@user.post('/tron/wallet/gen/', status_code=status.HTTP_201_CREATED)
 def createWallet(request: User, db: Session = Depends(get_db)):
     return create_new_wallet(request,db)
     
 
-@user.post('/tron/wallet/', status_code=status.HTTP_201_CREATED)
+@user.post('/tron/wallet/import/', status_code=status.HTTP_201_CREATED)
 def importWallet(request: ImportWallet, db: Session = Depends(get_db)):
     return import_wallet(request, db ) # type: ignore
 
-# @customer.post('/customer/auth', status_code=status.HTTP_201_CREATED)
-# def createCustomer(request: ReqCustomer, db: Session = Depends(get_db)):
-#     return create_new_customer(request,db)
 
+@user.post('/tron/wallet/details', status_code=status.HTTP_200_OK)
+def detailsWallet(request: WalletDetails, db: Session = Depends(get_db)):
+    return details_wallet(request, db)  # type: ignore
 
-# @customer.get('/customer/wallet/{phone}', status_code=status.HTTP_200_OK)
-# def Customerwallet(phone: int, db: Session = Depends(get_db)):
-#     return show_cust_wallet_amount(phone,db)
+@user.post('/tron/wallet/balance', status_code=status.HTTP_200_OK)
+def detailsWalletBal(request: WalletDetails, db: Session = Depends(get_db)):
+    return details_wallet_bal(request, db)  # type: ignore
+
+@user.get('/user/wallet/{hash_id}', status_code=status.HTTP_200_OK)
+def Userwallet(hash_id: str, db: Session = Depends(get_db)):
+    return show_user_wallet(hash_id ,db)            # type: ignore
 
 
 # @customer.post('/customer/wallet/addMoney/', status_code=status.HTTP_201_CREATED)
