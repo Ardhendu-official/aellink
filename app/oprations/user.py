@@ -25,7 +25,7 @@ def get_db():
 
 def create_new_wallet(request: User, db: Session = Depends(get_db)):
     hash_id = 'AL'+uuid.uuid1().hex[:8]
-    url= "http://65.2.7.120:2352/api/v1/tron/account"
+    url= "http://65.1.190.123:2352/api/v1/tron/account"
     # url= "http://192.168.0.140:2352/api/v1/tron/account"
     response = requests.post(url)
     wallet_details = response.json()
