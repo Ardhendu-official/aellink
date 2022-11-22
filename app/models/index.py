@@ -1,3 +1,4 @@
+from app.models.token import DbToken
 from app.models.user import DbUser
 
 # from app.models.game import DbGame
