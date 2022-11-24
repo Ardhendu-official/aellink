@@ -27,3 +27,4 @@ class sendTron(BaseModel):
     from_account: str
     to_account: str
     amount: int
+    user_hash_id: Optional[str] = None
