@@ -134,7 +134,14 @@ def details_wallet_bal(request: ImportWallet, db: Session = Depends(get_db)):
 
 def show_user_wallet(hash_id: str , db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_hash_id == hash_id).all()
-    return user
+    add =[]
+    u_detalis = []
+    data = []
+    for u_detalis in user:
+        # for data in DbUser.u_detalis['user_address']:  # type: ignore
+        add.append(u_detalis)
+        data = add
+        return data
 
 def send_trx(request: sendTron, db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_address == request.from_account).first()
