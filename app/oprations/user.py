@@ -1,11 +1,5 @@
-import json
-import random
-import secrets
-import time
-import urllib.request
 import uuid
-from datetime import datetime, timedelta
-from operator import or_
+from datetime import datetime
 from typing import List
 
 import pytz
@@ -15,8 +9,10 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
+from app.functions.index import Hash, HashVerify
 from app.models.index import DbToken, DbTrxTransaction, DbUser
-from app.schemas.index import ImportWallet, User, liveprice, sendTron
+from app.schemas.index import (ImportWallet, User, liveprice, passVarify,
+                               sendTron)
 
 
 def get_db():
@@ -37,7 +33,7 @@ def create_new_wallet(request: User, db: Session = Depends(get_db)):
         new_user = DbUser(
             user_hash_id= request.user_hash_id,
             user_wallet_name = request.user_wallet_name,
-            user_password = request.user_password,
+            user_password = Hash.bcrypt(request.user_password),  # type: ignore
             user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
             user_privateKey = wallet_details["account"]["privateKey"],
             user_mnemonic_key = wallet_details["phase"],
@@ -50,12 +46,11 @@ def create_new_wallet(request: User, db: Session = Depends(get_db)):
         user = DbUser(
             user_hash_id= hash_id,
             user_wallet_name = request.user_wallet_name,
-            user_password = request.user_password,
+            user_password = Hash.bcrypt(request.user_password),  # type: ignore
             user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
             user_privateKey = wallet_details["account"]["privateKey"],
             user_mnemonic_key = wallet_details["phase"],
             user_address = wallet_details["account"]["address"],
-            # user_token_id = 
         )
         db.add(user)
         db.commit()
@@ -63,47 +58,50 @@ def create_new_wallet(request: User, db: Session = Depends(get_db)):
     return details
 
 def import_wallet(request: ImportWallet, db: Session = Depends(get_db)):
-    user = db.query(DbUser).filter(DbUser.user_hash_id == request.user_hash_id).first()
-    mnemonic_key = ismnemonickey(request.m_key_or_p_key)             # type: ignore
-    if mnemonic_key["status"] == True:
-        list = db.query(DbUser).filter(DbUser.user_mnemonic_key == request.m_key_or_p_key).first()
-        if not list:                 # type: ignore
-            url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/phase"
-            body = {"phase": request.m_key_or_p_key}
-            headers = {'Content-type': 'application/json'}
-            response = requests.post(url,json=body,headers=headers)
-            wallet_details = response.json()
+    user = db.query(DbUser).filter(DbUser.user_hash_id == request.user_hash_id).all()
+    mnemonic_key = ismnemonickey(request.m_key_or_p_key) 
+    url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/phase"
+    body = {"phase": request.m_key_or_p_key}
+    headers = {'Content-type': 'application/json'}
+    response = requests.post(url,json=body,headers=headers)
+    wallet_details = response.json()
+    for u_detalis in user:
+        if u_detalis.user_address == wallet_details["address"]:
+           raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"address already added") 
         else:
-            return "mnemonic key already added"
-    else:
-        list = db.query(DbUser).filter(DbUser.user_privateKey == request.m_key_or_p_key).first()
-        if not list:
-            url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/private"
-            body = {"pkey": request.m_key_or_p_key}
-            headers = {'Content-type': 'application/json'}
-            response = requests.post(url,json=body,headers=headers)
-            wallet_details = response.json()
-        else:
-            return "private key already added"
+            if mnemonic_key["status"] == True:
+                url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/phase"
+                body = {"phase": request.m_key_or_p_key}
+                headers = {'Content-type': 'application/json'}
+                response = requests.post(url,json=body,headers=headers)
+                wallet_details = response.json()
+            else:
+                url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/private"
+                body = {"pkey": request.m_key_or_p_key}
+                headers = {'Content-type': 'application/json'}
+                response = requests.post(url,json=body,headers=headers)
+                wallet_details = response.json()
     hash_id = 'AL'+uuid.uuid1().hex[:8]
-    if user:    # type: ignore
-        user = DbUser(
-            user_hash_id=request.user_hash_id,
-            user_wallet_name = request.user_wallet_name,
-            user_password = request.user_password,
-            user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
-            user_privateKey = wallet_details["privateKey"],
-            user_mnemonic_key = request.m_key_or_p_key,
-            user_address =  wallet_details["address"]
-        )
-        db.add(user)
-        db.commit()
-        details = user = db.query(DbUser).filter(DbUser.user_id == user.user_id).first()  # type: ignore
+    if user:
+        if wallet_details:    # type: ignore
+            user = DbUser(
+                user_hash_id=request.user_hash_id,
+                user_wallet_name = request.user_wallet_name,
+                user_password = Hash.bcrypt(request.user_password),  # type: ignore
+                user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
+                user_privateKey = wallet_details["privateKey"],
+                user_mnemonic_key = request.m_key_or_p_key,
+                user_address =  wallet_details["address"]
+            )
+            db.add(user)
+            db.commit()
+            details_add = user = db.query(DbUser).filter(DbUser.user_id == user.user_id).first()  # type: ignore
     else:
         new_user = DbUser(
             user_hash_id=hash_id,
             user_wallet_name = request.user_wallet_name,
-            user_password = request.user_password,
+            user_password = Hash.bcrypt(request.user_password),  # type: ignore
             user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
             user_privateKey = wallet_details["privateKey"],
             user_mnemonic_key = request.m_key_or_p_key,
@@ -111,8 +109,8 @@ def import_wallet(request: ImportWallet, db: Session = Depends(get_db)):
         )
         db.add(new_user)
         db.commit()
-        details = user = db.query(DbUser).filter(DbUser.user_id == new_user.user_id).first()
-    return details
+        details_add = user = db.query(DbUser).filter(DbUser.user_id == new_user.user_id).first()
+    return details_add                    # type: ignore
     
 def details_wallet(request: ImportWallet, db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_hash_id == request.user_hash_id).first()
@@ -134,86 +132,115 @@ def details_wallet_bal(request: ImportWallet, db: Session = Depends(get_db)):
 
 def show_user_wallet(hash_id: str , db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_hash_id == hash_id).all()
-    # add =[]
-    # u_detalis = []
-    # data = []
-    # for u_detalis in user:
-    #     # for data in DbUser.u_detalis['user_address']:  # type: ignore
-    #     add.append(u_detalis)
-    #     data = add
-    return user
+    data = []
+    for u_detalis in user:
+        url= "http://13.234.52.167:2352/api/v1/tron/wallet/details"
+        body = {"address": u_detalis.user_address}           # type: ignore
+        headers = {'Content-type': 'application/json'}
+        response = requests.post(url,json=body,headers=headers)
+        wallet_details = response.json()
+        balance = wallet_details["balance"] + wallet_details["totalFrozen"]
+        dtl = {
+            "user_privateKey": u_detalis.user_privateKey,
+            "user_mnemonic_key": u_detalis.user_mnemonic_key,
+            "user_wallet_name": u_detalis.user_wallet_name,
+            "user_hash_id": u_detalis.user_hash_id,
+            "user_address": u_detalis.user_address,
+            "user_registration_date_time": u_detalis.user_registration_date_time,
+            "token_balance": balance/1000000
+        }
+        data.append(dtl)
+    return data
 
 def send_trx(request: sendTron, db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_address == request.from_account).first()
-    url= 'http://13.234.52.167:2352/api/v1/tron//wallet/send'
-    body = {"from_account": request.from_account,
-            "to_account": request.to_account,
-            "amount": request.amount,
-            "privateKey": user.user_privateKey                    # type: ignore
-        }           
-    headers = {'Content-type': 'application/json'}
-    response = requests.post(url,json=body,headers=headers)
-    wallet_details = response.json()
-  
-    amount = wallet_details['transaction']['raw_data']['contract'][0]['parameter']['value']['amount']
-    new_trans = DbTrxTransaction(
-            transaction_tx_id = wallet_details['txid'],
-            transaction_amount = amount/1000000,
-            trans_from_account = request.from_account,
-            trans_to_account = request.to_account,
-            trans_user_id = request.user_hash_id,
-            transaction_date_time = datetime.now(pytz.timezone('Asia/Calcutta')),
-        )
-    db.add(new_trans)
-    db.commit()
-    trans = db.query(DbTrxTransaction).filter(DbTrxTransaction.transaction_id == new_trans.transaction_id).first()
-    return trans
-
-
-# def get_details(hash: str):
-# data = str(wallet_details['txid'])
-# data = "f5e7505f87631a0b4c4714d13825a66368ad2bb8df65d2179cea9414c7df78ed"
-# url_trx = str('https://apilist.tronscan.org/api/transaction-info?hash=' + str(wallet_details['transaction']['txID']))  
-# hdr = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36', 'Content-type': 'application/json', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-GB,en-IN;q=0.9,en-US;q=0.8,en;q=0.7', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache', 'Accept-Encoding': 'gzip, deflate, br', 'Connection': 'keep-alive'}           # type: ignore
-# response_trx = get_details(str(wallet_details['transaction']['txID']))  # type: ignore
-# trx_details = response_trx
-#     url_trx_bal = str('https://apilist.tronscan.org/api/transaction-info?hash=' + hash)  
-#     hdr = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36', 'Content-type': 'application/json', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-GB,en-IN;q=0.9,en-US;q=0.8,en;q=0.7', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache', 'Accept-Encoding': 'gzip, deflate, br', 'Connection': 'keep-alive'}           # type: ignore
-#     try: 
-#         response_trx = requests.get(url_trx_bal, headers=hdr).json()  # type: ignore
-#         print(jsonable_encoder(response_trx))
-#         print('lol')
-#     except:
-#         response_trx = {}
-#         print('bal')
-#     return response_trx
-
-def show_all_transaction(address: str , db: Session = Depends(get_db)):
-    trans = db.query(DbTrxTransaction).filter(or_(DbTrxTransaction.trans_from_account == address, DbTrxTransaction.trans_to_account == address)).order_by(
-        DbTrxTransaction.transaction_date_time.desc()).all()
-    if not trans:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"no transaction detalis found")
-    else: 
+    if HashVerify.bcrypt_verify(request.password, user.user_password):                 # type: ignore  
+        url= 'http://13.234.52.167:2352/api/v1/tron//wallet/send'
+        body = {"from_account": request.from_account,
+                "to_account": request.to_account,
+                "amount": request.amount,
+                "privateKey": user.user_privateKey                    # type: ignore
+            }           
+        headers = {'Content-type': 'application/json'}
+        response = requests.post(url,json=body,headers=headers)
+        wallet_details = response.json()
+        amount = wallet_details['transaction']['raw_data']['contract'][0]['parameter']['value']['amount']
+        new_trans = DbTrxTransaction(
+                transaction_tx_id = wallet_details['txid'],
+                transaction_amount = amount/1000000,
+                trans_from_account = request.from_account,
+                trans_to_account = request.to_account,
+                trans_user_id = request.user_hash_id,
+                transaction_date_time = datetime.now(pytz.timezone('Asia/Calcutta')),
+            )
+        db.add(new_trans)
+        db.commit()
+        trans = db.query(DbTrxTransaction).filter(DbTrxTransaction.transaction_id == new_trans.transaction_id).first()
         return trans
-
-def show_send_transaction(address: str , db: Session = Depends(get_db)):
-    trans = db.query(DbTrxTransaction).filter(DbTrxTransaction.trans_from_account == address).order_by(
-        DbTrxTransaction.transaction_date_time.desc()).all()
-    if not trans:
+    else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"no transaction detalis found")
-    else: 
-        return trans
+                            detail=f"worng password")
 
-def show_receive_transaction(address: str , db: Session = Depends(get_db)):
-    trans = db.query(DbTrxTransaction).filter(DbTrxTransaction.trans_to_account == address).order_by(
-        DbTrxTransaction.transaction_date_time.desc()).all()
-    if not trans:
+def show_all_transaction(address: str, start:str, db: Session = Depends(get_db)):
+    url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        transac = {
+        "transaction_tx_id": dt["hash"],
+        "transaction_contract": dt["contractData"],
+        "transaction_date_time": dt["timestamp"],
+        "transaction_status": dt["confirmed"]
+        }
+        data.append(transac)
+    return [reacharge_responce["total"], data]
+
+def show_send_transaction(address: str, start:str , db: Session = Depends(get_db)):
+    url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        if dt["ownerAddress"] == address:
+            transac = {
+            "transaction_tx_id": dt["hash"],
+            "transaction_contract": dt["contractData"],
+            "transaction_date_time": dt["timestamp"],
+            "transaction_status": dt["confirmed"]
+            }
+            data.append(transac)
+    return [reacharge_responce["total"], data]
+
+def show_receive_transaction(address: str, start: str, db: Session = Depends(get_db)):
+    url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        if dt["toAddress"] == address:
+            transac = {
+            "transaction_tx_id": dt["hash"],
+            "transaction_contract": dt["contractData"],
+            "transaction_date_time": dt["timestamp"],
+            "transaction_status": dt["confirmed"]
+            }
+            data.append(transac)
+    return [reacharge_responce["total"], data]
+
+def varify_pass(request: passVarify, db: Session = Depends(get_db)):
+    user = db.query(DbUser).filter(DbUser.user_address == request.user_address).first()
+    if HashVerify.bcrypt_verify(request.password, user.user_password):                 # type: ignore  
+       raise HTTPException(status_code=status.HTTP_200_OK,
+                            detail=f"correct password")
+    else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"no transaction detalis found")
-    else: 
-        return trans
+                            detail=f"incorrect password")
+
+
+
+
+
 
 def ismnemonickey(mkey):  # type: ignore
     url= "http://13.234.52.167:2352/api/v1/tron/isphase"

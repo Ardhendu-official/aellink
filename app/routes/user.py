@@ -13,9 +13,10 @@ from app.oprations.index import (create_new_wallet, details_wallet,
                                  details_wallet_bal, import_wallet, send_trx,
                                  show_all_transaction,
                                  show_receive_transaction,
-                                 show_send_transaction, show_user_wallet)
-from app.schemas.index import sendTron  # type: ignore
-from app.schemas.index import ImportWallet, User, WalletDetails, liveprice
+                                 show_send_transaction, show_user_wallet,
+                                 varify_pass)
+from app.schemas.index import (ImportWallet, User, WalletDetails, liveprice,
+                               passVarify, sendTron)
 
 user = APIRouter()
 
@@ -45,21 +46,25 @@ def detailsWalletBal(request: WalletDetails, db: Session = Depends(get_db)):
     return details_wallet_bal(request, db)  # type: ignore
 
 @user.get('/user/wallet/{hash_id}', status_code=status.HTTP_200_OK)
-def Userwallet(hash_id: str, db: Session = Depends(get_db)):  # type: ignore
-    return show_user_wallet(hash_id ,db)            # type: ignore
+def Userwallet(hash_id: str, db: Session = Depends(get_db)):  
+    return show_user_wallet(hash_id, db)           
 
 @user.post('/tron/send', status_code=status.HTTP_200_OK)
-def sendTron(request: sendTron, db: Session = Depends(get_db)):  # type: ignore
-    return send_trx(request, db)  # type: ignore
+def sendTrx(request: sendTron, db: Session = Depends(get_db)):  
+    return send_trx(request, db)  
 
-@user.get('/transaction/all/{address}', status_code=status.HTTP_200_OK)
-def transactionAll(address: str, db: Session = Depends(get_db)):
-    return show_all_transaction(address ,db)
+@user.get('/transaction/all/{address}/{start}', status_code=status.HTTP_200_OK)
+def transactionAll(address: str, start:str, db: Session = Depends(get_db)):
+    return show_all_transaction(address, start, db)  
 
-@user.get('/transaction/send/{address}', status_code=status.HTTP_200_OK)
-def transactionSend(address: str, db: Session = Depends(get_db)):
-    return show_send_transaction(address ,db)
+@user.get('/transaction/send/{address}/{start}', status_code=status.HTTP_200_OK)
+def transactionSend(address: str, start:str, db: Session = Depends(get_db)):
+    return show_send_transaction(address, start, db)  
 
-@user.get('/transaction/receive/{address}', status_code=status.HTTP_200_OK)
-def transactionReceive(address: str, db: Session = Depends(get_db)):
-    return show_receive_transaction(address ,db)
+@user.get('/transaction/receive/{address}/{start}', status_code=status.HTTP_200_OK)
+def transactionReceive(address: str, start:str, db: Session = Depends(get_db)):
+    return show_receive_transaction(address, start, db)  
+
+@user.post('/verify/pass', status_code=status.HTTP_200_OK)
+def varifyPass(request: passVarify, db: Session = Depends(get_db)):  
+    return varify_pass(request, db)  

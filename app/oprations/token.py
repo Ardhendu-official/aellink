@@ -44,7 +44,7 @@ def create_new_token(request: Assets, db: Session = Depends(get_db)):
     db.add(new_token)
     db.commit()
     token = db.query(DbToken).filter(DbToken.token_id == new_token.token_id).first()
-    return token
+    return data
 
 def show_token(db: Session = Depends(get_db)):
     token = db.query(DbToken).all()
