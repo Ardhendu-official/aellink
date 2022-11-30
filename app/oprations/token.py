@@ -44,8 +44,49 @@ def create_new_token(request: Assets, db: Session = Depends(get_db)):
     db.add(new_token)
     db.commit()
     token = db.query(DbToken).filter(DbToken.token_id == new_token.token_id).first()
-    return data
+    return token
 
 def show_token(db: Session = Depends(get_db)):
     token = db.query(DbToken).all()
-    return token
+    data = []
+    for value in token:                   # type: ignore
+        token_i = value.token_short_name
+        tok = token_i.upper()
+        if tok == "AEL":
+            token_details = {
+                "token_id": value.token_id,
+                "token_contect_id": value.token_contect_id,
+                "token_type": value.token_type,
+                "issuer_addr": value.issuer_addr,
+                "token_decimal": value.token_decimal,
+                "token_registration_date_time": value.token_registration_date_time,
+                "token_short_name": value.token_short_name,
+                "token_name": value.token_name,
+                "token_logo": value.token_logo,
+                "token_level": value.token_level,
+                "token_vip": value.token_vip,  
+                "token_can_show": value.token_can_show,  
+                "token_price": 2
+            }
+        else:
+            apikey="17CE6472-3692-439D-9A80-20734FBEA06F"
+            url_price= "https://rest.coinapi.io/v1/exchangerate/"+tok+"/USD?apikey="+apikey
+            res = requests.get(url_price)
+            price_details = res.json()
+            token_details = {
+                "token_id": value.token_id,
+                "token_contect_id": value.token_contect_id,
+                "token_type": value.token_type,
+                "issuer_addr": value.issuer_addr,
+                "token_decimal": value.token_decimal,
+                "token_registration_date_time": value.token_registration_date_time,
+                "token_short_name": value.token_short_name,
+                "token_name": value.token_name,
+                "token_logo": value.token_logo,
+                "token_level": value.token_level,
+                "token_vip": value.token_vip,  
+                "token_can_show": value.token_can_show,  
+                "token_price": price_details['rate']
+            }
+        data.append(token_details)
+    return data

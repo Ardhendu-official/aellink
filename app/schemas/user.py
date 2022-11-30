@@ -28,7 +28,7 @@ class sendTron(BaseModel):
     to_account: str
     amount: int
     user_hash_id: Optional[str] = None
-    password: str
+    password: Optional[str] = None
 
 class passVarify(BaseModel):
     user_address: str

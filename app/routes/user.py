@@ -11,7 +11,7 @@ from app.config.database import SessionLocal, engine
 from app.models.index import DbUser
 from app.oprations.index import (create_new_wallet, details_wallet,
                                  details_wallet_bal, import_wallet, send_trx,
-                                 show_all_transaction,
+                                 show_all_transaction, show_note_transaction,
                                  show_receive_transaction,
                                  show_send_transaction, show_user_wallet,
                                  varify_pass)
@@ -64,6 +64,10 @@ def transactionSend(address: str, start:str, db: Session = Depends(get_db)):
 @user.get('/transaction/receive/{address}/{start}', status_code=status.HTTP_200_OK)
 def transactionReceive(address: str, start:str, db: Session = Depends(get_db)):
     return show_receive_transaction(address, start, db)  
+
+@user.get('/transaction/note/{address}/{start}', status_code=status.HTTP_200_OK)
+def transactionNote(address: str, start:str, db: Session = Depends(get_db)):
+    return show_note_transaction(address, start, db) 
 
 @user.post('/verify/pass', status_code=status.HTTP_200_OK)
 def varifyPass(request: passVarify, db: Session = Depends(get_db)):  
