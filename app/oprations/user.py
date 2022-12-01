@@ -132,7 +132,7 @@ def details_wallet(request: WalletDetails, db: Session = Depends(get_db)):
                 "rate": 2.00
             }
         else:
-            apikey="EE02FA07-E83C-44A0-BB04-AEBF398513A8"
+            apikey="3968BDD4-E8D6-4FC0-BE69-8E9D06C558A1"
             url_price= "https://rest.coinapi.io/v1/exchangerate/"+token+"/USD?apikey="+apikey
             res = requests.get(url_price)
             price_details = res.json()
