@@ -69,7 +69,7 @@ def show_token(db: Session = Depends(get_db)):
                 "token_price": 2
             }
         else:
-            apikey="8BF702C5-CDA3-4611-8961-59DEF7737278"
+            apikey="EE02FA07-E83C-44A0-BB04-AEBF398513A8"
             url_price= "https://rest.coinapi.io/v1/exchangerate/"+tok+"/USD?apikey="+apikey
             res = requests.get(url_price)
             price_details = res.json()
