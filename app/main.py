@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm.session import Session
 
 from app.config.database import Base, engine
-from app.routes.index import token, user
+from app.routes.index import token, user, assets
 
 Base.metadata.create_all(engine)
 
@@ -21,3 +21,4 @@ app.add_middleware(
 
 app.include_router(user,tags=['User'])
 app.include_router(token,tags=['Token'])
+app.include_router(assets,tags=['Assets'])
