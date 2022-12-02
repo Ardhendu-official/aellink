@@ -9,7 +9,8 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.models.index import DbUser
-from app.oprations.index import (change_pass, create_new_wallet,
+from app.oprations.index import (backup_wallet_phase, backup_wallet_private,
+                                 change_pass, create_new_wallet,
                                  details_wallet, details_wallet_bal,
                                  import_wallet, send_trx, show_all_transaction,
                                  show_note_transaction,
@@ -81,3 +82,11 @@ def changePass(request: passChange, db: Session = Depends(get_db)):
 @user.post('/wallet/update', status_code=status.HTTP_202_ACCEPTED)
 def walletUpdate(request: updateWallet, db: Session = Depends(get_db)):  
     return wallet_update(request, db)
+
+@user.post('/wallet/backup', status_code=status.HTTP_200_OK)
+def WalletBackup(request: WalletDetails, db: Session = Depends(get_db)):
+    return backup_wallet_private(request, db)  # type: ignore
+
+@user.post('/wallet/backup/phase', status_code=status.HTTP_200_OK)
+def WalletBackupPhase(request: WalletDetails, db: Session = Depends(get_db)):
+    return backup_wallet_phase(request, db)  # type: ignore

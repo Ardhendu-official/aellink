@@ -345,7 +345,21 @@ def wallet_update(request: updateWallet, db: Session = Depends(get_db)):
         user = db.query(DbUser).filter(DbUser.user_address == request.user_address).first()
         return {"msg": "update done", "detalis": user}
 
+def backup_wallet_private(request: WalletDetails, db: Session = Depends(get_db)):
+    user = db.query(DbUser).filter(and_(DbUser.user_address == request.user_address, DbUser.user_hash_id == request.user_hash_id)).first()
+    private = {
+        "address": user.user_address,  # type: ignore
+        "private_key": user.user_privateKey      # type: ignore
+    }
+    return private
 
+def backup_wallet_phase(request: WalletDetails, db: Session = Depends(get_db)):
+    user = db.query(DbUser).filter(and_(DbUser.user_address == request.user_address, DbUser.user_hash_id == request.user_hash_id)).first()
+    phase = {
+        "address": user.user_address,  # type: ignore
+        "private_key": user.user_mnemonic_key      # type: ignore
+    }
+    return phase
 
 
 
