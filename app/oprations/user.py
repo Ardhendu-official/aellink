@@ -7,6 +7,7 @@ import pytz
 import requests
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import and_, or_
 from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
@@ -14,7 +15,7 @@ from app.functions.index import Hash, HashVerify
 from app.models.index import (DbFeesTransaction, DbToken, DbTrxTransaction,
                               DbUser)
 from app.schemas.index import (ImportWallet, User, WalletDetails, liveprice,
-                               passVarify, sendTron)
+                               passChange, passVarify, sendTron, updateWallet)
 
 
 def get_db():
@@ -306,14 +307,43 @@ def show_note_transaction(address: str, start:str , db: Session = Depends(get_db
     return [reacharge_responce["total"], data]    
 
 def varify_pass(request: passVarify, db: Session = Depends(get_db)):
-    user = db.query(DbUser).filter(DbUser.user_address == request.user_address).first()
-    if HashVerify.bcrypt_verify(request.password, user.user_password):                 # type: ignore  
-       raise HTTPException(status_code=status.HTTP_200_OK,
-                            detail=f"correct password")
+    user = db.query(DbUser).filter(and_(DbUser.user_address == request.user_address, DbUser.user_hash_id == request.user_hash_id)).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_200_OK,
+                            detail=f"user not found")
     else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"incorrect password")
+        if HashVerify.bcrypt_verify(request.password, user.user_password):                 # type: ignore  
+            raise HTTPException(status_code=status.HTTP_200_OK,
+                                detail=f"correct password")
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f"incorrect password")
 
+def change_pass(request: passChange, db: Session = Depends(get_db)):
+    user = db.query(DbUser).filter(and_(DbUser.user_address == request.user_address, DbUser.user_hash_id == request.user_hash_id)).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_200_OK,
+                            detail=f"user not found")
+    else:
+        if HashVerify.bcrypt_verify(request.password, user.user_password):                 # type: ignore  
+            password = Hash.bcrypt(request.new_password)  # type: ignore
+            db.query(DbUser).filter(DbUser.user_address == request.user_address).update({"user_password": f'{password}'}, synchronize_session='evaluate')
+            db.commit()
+            return {"msg": "password update done"}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f"incorrect password")
+
+def wallet_update(request: updateWallet, db: Session = Depends(get_db)):
+    user = db.query(DbUser).filter(and_(DbUser.user_address == request.user_address, DbUser.user_hash_id == request.user_hash_id)).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_200_OK,
+                            detail=f"user not found")
+    else:    
+        db.query(DbUser).filter(DbUser.user_address == request.user_address).update({"user_wallet_name": f'{request.user_wallet_name}'}, synchronize_session='evaluate')
+        db.commit()
+        user = db.query(DbUser).filter(DbUser.user_address == request.user_address).first()
+        return {"msg": "update done", "detalis": user}
 
 
 

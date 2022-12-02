@@ -86,7 +86,7 @@ def show_token(db: Session = Depends(get_db)):
                 "token_level": value.token_level,
                 "token_vip": value.token_vip,  
                 "token_can_show": value.token_can_show,  
-                "token_price": price_details['rate']
+                # "token_price": price_details['rate']
             }
         data.append(token_details)
-    return data
+    return price_details               # type: ignore

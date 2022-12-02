@@ -33,3 +33,15 @@ class sendTron(BaseModel):
 class passVarify(BaseModel):
     user_address: str
     password: str
+    user_hash_id: Optional[str] = None
+
+class passChange(BaseModel):
+    user_address: str
+    password: str
+    new_password: str
+    user_hash_id: Optional[str] = None
+
+class updateWallet(BaseModel):
+    user_address: str
+    user_wallet_name: str
+    user_hash_id: Optional[str] = None

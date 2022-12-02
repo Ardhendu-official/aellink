@@ -9,14 +9,15 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.models.index import DbUser
-from app.oprations.index import (create_new_wallet, details_wallet,
-                                 details_wallet_bal, import_wallet, send_trx,
-                                 show_all_transaction, show_note_transaction,
+from app.oprations.index import (change_pass, create_new_wallet,
+                                 details_wallet, details_wallet_bal,
+                                 import_wallet, send_trx, show_all_transaction,
+                                 show_note_transaction,
                                  show_receive_transaction,
                                  show_send_transaction, show_user_wallet,
-                                 varify_pass)
+                                 varify_pass, wallet_update)
 from app.schemas.index import (ImportWallet, User, WalletDetails, liveprice,
-                               passVarify, sendTron)
+                               passChange, passVarify, sendTron, updateWallet)
 
 user = APIRouter()
 
@@ -72,3 +73,11 @@ def transactionNote(address: str, start:str, db: Session = Depends(get_db)):
 @user.post('/verify/pass', status_code=status.HTTP_200_OK)
 def varifyPass(request: passVarify, db: Session = Depends(get_db)):  
     return varify_pass(request, db)  
+
+@user.post('/change/pass', status_code=status.HTTP_202_ACCEPTED)
+def changePass(request: passChange, db: Session = Depends(get_db)):  
+    return change_pass(request, db)
+
+@user.post('/wallet/update', status_code=status.HTTP_202_ACCEPTED)
+def walletUpdate(request: updateWallet, db: Session = Depends(get_db)):  
+    return wallet_update(request, db)
