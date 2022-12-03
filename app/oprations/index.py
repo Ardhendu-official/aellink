@@ -7,4 +7,4 @@ from app.oprations.user import (backup_wallet_phase, backup_wallet_private,
                                 show_all_transaction, show_note_transaction,
                                 show_receive_transaction,
                                 show_send_transaction, show_user_wallet,
-                                varify_pass, wallet_update)
+                                varify_pass, wallet_delete, wallet_update)

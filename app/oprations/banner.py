@@ -15,6 +15,7 @@ from app.config.database import SessionLocal, engine
 from app.models.index import DbBanner
 from app.schemas.index import Banner
 
+
 def get_db():
     db = SessionLocal()
     try:

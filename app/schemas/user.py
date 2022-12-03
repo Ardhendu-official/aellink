@@ -45,3 +45,7 @@ class updateWallet(BaseModel):
     user_address: str
     user_wallet_name: str
     user_hash_id: Optional[str] = None
+
+class deleteWallet(BaseModel):
+    user_address: str
+    user_hash_id: Optional[str] = None

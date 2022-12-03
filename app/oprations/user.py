@@ -14,8 +14,9 @@ from app.config.database import SessionLocal, engine
 from app.functions.index import Hash, HashVerify
 from app.models.index import (DbFeesTransaction, DbToken, DbTrxTransaction,
                               DbUser)
-from app.schemas.index import (ImportWallet, User, WalletDetails, liveprice,
-                               passChange, passVarify, sendTron, updateWallet)
+from app.schemas.index import (ImportWallet, User, WalletDetails, deleteWallet,
+                               liveprice, passChange, passVarify, sendTron,
+                               updateWallet)
 
 
 def get_db():
@@ -40,7 +41,8 @@ def create_new_wallet(request: User, db: Session = Depends(get_db)):
             user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
             user_privateKey = wallet_details["account"]["privateKey"],
             user_mnemonic_key = wallet_details["phase"],
-            user_address = wallet_details["account"]["address"]
+            user_address = wallet_details["account"]["address"],
+            user_show = "true"
         )
         db.add(new_user)
         db.commit()
@@ -54,6 +56,7 @@ def create_new_wallet(request: User, db: Session = Depends(get_db)):
             user_privateKey = wallet_details["account"]["privateKey"],
             user_mnemonic_key = wallet_details["phase"],
             user_address = wallet_details["account"]["address"],
+            user_show = "true"
         )
         db.add(user)
         db.commit()
@@ -95,7 +98,8 @@ def import_wallet(request: ImportWallet, db: Session = Depends(get_db)):
                 user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
                 user_privateKey = wallet_details["privateKey"],
                 user_mnemonic_key = request.m_key_or_p_key,
-                user_address =  wallet_details["address"]
+                user_address =  wallet_details["address"],
+                user_show = "true"
             )
             db.add(user)
             db.commit()
@@ -108,7 +112,8 @@ def import_wallet(request: ImportWallet, db: Session = Depends(get_db)):
             user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
             user_privateKey = wallet_details["privateKey"],
             user_mnemonic_key = request.m_key_or_p_key,
-            user_address = wallet_details["address"]
+            user_address = wallet_details["address"],
+            user_show = "true"
         )
         db.add(new_user)
         db.commit()
@@ -159,26 +164,32 @@ def details_wallet_bal(request: ImportWallet, db: Session = Depends(get_db)):
     return data
 
 def show_user_wallet(hash_id: str , db: Session = Depends(get_db)):
-    user = db.query(DbUser).filter(DbUser.user_hash_id == hash_id).all()
+    # user = db.query(DbUser).filter(DbUser.user_hash_id == hash_id).all()
+    user = db.query(DbUser).filter(and_(DbUser.user_hash_id == hash_id, DbUser.user_show == "true")).all()
     data = []
-    for u_detalis in user:
-        url= "http://13.234.52.167:2352/api/v1/tron/wallet/details"
-        body = {"address": u_detalis.user_address}           # type: ignore
-        headers = {'Content-type': 'application/json'}
-        response = requests.post(url,json=body,headers=headers)
-        wallet_details = response.json()
-        balance = wallet_details["balance"] + wallet_details["totalFrozen"]
-        dtl = {
-            "user_privateKey": u_detalis.user_privateKey,
-            "user_mnemonic_key": u_detalis.user_mnemonic_key,
-            "user_wallet_name": u_detalis.user_wallet_name,
-            "user_hash_id": u_detalis.user_hash_id,
-            "user_address": u_detalis.user_address,
-            "user_registration_date_time": u_detalis.user_registration_date_time,
-            "token_balance": balance/1000000
-        }
-        data.append(dtl)
-    return data
+    if user:
+        for u_detalis in user:
+            url= "http://13.234.52.167:2352/api/v1/tron/wallet/details"
+            body = {"address": u_detalis.user_address}           # type: ignore
+            headers = {'Content-type': 'application/json'}
+            response = requests.post(url,json=body,headers=headers)
+            wallet_details = response.json()
+            balance = wallet_details["balance"] + wallet_details["totalFrozen"]
+            dtl = {
+                "user_privateKey": u_detalis.user_privateKey,
+                "user_mnemonic_key": u_detalis.user_mnemonic_key,
+                "user_wallet_name": u_detalis.user_wallet_name,
+                "user_hash_id": u_detalis.user_hash_id,
+                "user_address": u_detalis.user_address,
+                "user_registration_date_time": u_detalis.user_registration_date_time,
+                "token_balance": balance/1000000, 
+                "user_show": u_detalis.user_show
+            }
+            data.append(dtl)
+        return data
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"user not found")
 
 def send_trx(request: sendTron, db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_address == request.from_account).first()
@@ -360,6 +371,23 @@ def backup_wallet_phase(request: WalletDetails, db: Session = Depends(get_db)):
         "private_key": user.user_mnemonic_key      # type: ignore
     }
     return phase
+
+def wallet_delete(request: deleteWallet, db: Session = Depends(get_db)):
+    user = db.query(DbUser).filter(and_(DbUser.user_address == request.user_address, DbUser.user_hash_id == request.user_hash_id)).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_200_OK,
+                            detail=f"user not found")
+    else:    
+        db.query(DbUser).filter(DbUser.user_address == request.user_address).update({"user_show": f'{"false"}'}, synchronize_session='evaluate')
+        db.commit()
+        user = db.query(DbUser).filter(DbUser.user_address == request.user_address).first()
+        return {"msg": "delete done", "detalis": user}
+
+
+
+
+
+
 
 
 

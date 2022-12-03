@@ -19,4 +19,5 @@ class DbUser(Base):
     user_registration_date_time = Column(DateTime)
     user_password = Column(String(255))
     user_token_id = Column(String(255))
+    user_show = Column(String(255))
     

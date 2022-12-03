@@ -16,9 +16,10 @@ from app.oprations.index import (backup_wallet_phase, backup_wallet_private,
                                  show_note_transaction,
                                  show_receive_transaction,
                                  show_send_transaction, show_user_wallet,
-                                 varify_pass, wallet_update)
-from app.schemas.index import (ImportWallet, User, WalletDetails, liveprice,
-                               passChange, passVarify, sendTron, updateWallet)
+                                 varify_pass, wallet_delete, wallet_update)
+from app.schemas.index import (ImportWallet, User, WalletDetails, deleteWallet,
+                               liveprice, passChange, passVarify, sendTron,
+                               updateWallet)
 
 user = APIRouter()
 
@@ -90,3 +91,7 @@ def WalletBackup(request: WalletDetails, db: Session = Depends(get_db)):
 @user.post('/wallet/backup/phase', status_code=status.HTTP_200_OK)
 def WalletBackupPhase(request: WalletDetails, db: Session = Depends(get_db)):
     return backup_wallet_phase(request, db)  # type: ignore
+
+@user.post('/wallet/delete', status_code=status.HTTP_202_ACCEPTED)
+def walletDelete(request: deleteWallet, db: Session = Depends(get_db)):  
+    return wallet_delete(request, db)
