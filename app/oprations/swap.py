@@ -24,30 +24,41 @@ def get_db():
         db.close()
 
 
-# def create_new_token(request: Assets, db: Session = Depends(get_db)):
-#     url = 'https://apilist.tronscan.org/api/contract?contract='+request.token_contect_id    # type: ignore
-#     response = requests.get(url)  # type: ignore
-#     data = response.json()
-#     new_token = DbToken(
-#         token_name = data["data"][0]['tokenInfo']["tokenName"],
-#         token_short_name= data["data"][0]['tokenInfo']["tokenAbbr"],
-#         token_contect_id = data["data"][0]['tokenInfo']["tokenId"],
-#         token_logo = data["data"][0]['tokenInfo']["tokenLogo"],
-#         token_type = data["data"][0]['tokenInfo']["tokenType"],
-#         token_decimal = data["data"][0]['tokenInfo']["tokenDecimal"],
-#         token_can_show = data["data"][0]['tokenInfo']["tokenCanShow"],
-#         token_level = data["data"][0]['tokenInfo']["tokenLevel"],
-#         issuer_addr = data["data"][0]['tokenInfo']["issuerAddr"],
-#         token_vip = data["data"][0]['tokenInfo']["vip"],
-#         token_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
-#     )
-#     db.add(new_token)
-#     db.commit()
-#     token = db.query(DbToken).filter(DbToken.token_id == new_token.token_id).first()
-#     return token
+def show_swap_pair(asset: str, db: Session = Depends(get_db)):
+    url = 'https://list.justswap.link/justswap.json'
+    response = requests.get(url)
+    res = response.json()
+    trx = {
+      "symbol": "TRX",
+      "decimals": 6,
+      "name": "tron",
+      "logoURI": "https://static.tronscan.org/production/logo/trx.png"
+    }
+    data = res["tokens"]
+    data.insert(0,trx)
+    ass = []
+    for index, tok in enumerate(data):
+        if data[index]["symbol"] == asset:
+                data.pop(index)
+    return data
 
 def show_swap_list(db: Session = Depends(get_db)):
     url = 'https://list.justswap.link/justswap.json'
     response = requests.get(url)
-    reacharge_responce = response.json()
-    return reacharge_responce
+    res = response.json()
+    trx = {
+      "symbol": "TRX",
+      "decimals": 6,
+      "name": "tron",
+      "logoURI": "https://static.tronscan.org/production/logo/trx.png"
+    }
+    data = res["tokens"]
+    data.insert(0,trx)
+    return data
+
+def show_swap_value(frm: str, to: str, db: Session = Depends(get_db)):
+    apikey="3968BDD4-E8D6-4FC0-BE69-8E9D06C558A1"
+    url_price= "https://rest.coinapi.io/v1/exchangerate/"+frm+"/"+to+"?apikey="+apikey
+    res = requests.get(url_price)
+    price_details = res.json()
+    return price_details

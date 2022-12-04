@@ -66,11 +66,18 @@ def create_new_wallet(request: User, db: Session = Depends(get_db)):
 def import_wallet(request: ImportWallet, db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_hash_id == request.user_hash_id).all()
     mnemonic_key = ismnemonickey(request.m_key_or_p_key) 
-    url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/phase"
-    body = {"phase": request.m_key_or_p_key}
-    headers = {'Content-type': 'application/json'}
-    response = requests.post(url,json=body,headers=headers)
-    wallet_details = response.json()
+    if mnemonic_key["status"] == True:
+                url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/phase"
+                body = {"phase": request.m_key_or_p_key}
+                headers = {'Content-type': 'application/json'}
+                response = requests.post(url,json=body,headers=headers)
+                wallet_details = response.json()
+    else:
+        url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/private"
+        body = {"pkey": request.m_key_or_p_key}
+        headers = {'Content-type': 'application/json'}
+        response = requests.post(url,json=body,headers=headers)
+        wallet_details = response.json()
     for u_detalis in user:
         if u_detalis.user_address == wallet_details["address"]:
            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -95,7 +102,7 @@ def import_wallet(request: ImportWallet, db: Session = Depends(get_db)):
                 user_hash_id=request.user_hash_id,
                 user_wallet_name = request.user_wallet_name,
                 user_password = Hash.bcrypt(request.user_password),  # type: ignore
-                user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
+                user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),  # type: ignore
                 user_privateKey = wallet_details["privateKey"],
                 user_mnemonic_key = request.m_key_or_p_key,
                 user_address =  wallet_details["address"],

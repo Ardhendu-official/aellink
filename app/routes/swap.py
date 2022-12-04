@@ -9,7 +9,7 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.models.index import DbToken
-from app.oprations.index import create_new_token, show_swap_list
+from app.oprations.index import show_swap_list, show_swap_pair, show_swap_value
 from app.schemas.index import Assets
 
 swap = APIRouter()
@@ -23,10 +23,14 @@ def get_db():
         db.close()
 
 
-# @swap.post('/swap', status_code=status.HTTP_201_CREATED)
-# def createToken(request: Assets, db: Session = Depends(get_db)):
-#     return create_new_token(request,db)  # type: ignore
+@swap.get('/swap/pair/{asset}', status_code=status.HTTP_200_OK)
+def showSwappair(asset: str, db: Session = Depends(get_db)):
+    return show_swap_pair(asset, db)    # type: ignore
 
 @swap.get('/swap/list', status_code=status.HTTP_200_OK)
 def showSwapList(db: Session = Depends(get_db)):
-    return show_swap_list(db)  
+    return show_swap_list(db)
+
+@swap.get('/swap/value/{frm}/{to}', status_code=status.HTTP_200_OK)
+def showSwapvalue(frm: str, to: str, db: Session = Depends(get_db)):
+    return show_swap_value(frm, to, db)  
