@@ -67,11 +67,11 @@ def import_wallet(request: ImportWallet, db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.user_hash_id == request.user_hash_id).all()
     mnemonic_key = ismnemonickey(request.m_key_or_p_key) 
     if mnemonic_key["status"] == True:
-                url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/phase"
-                body = {"phase": request.m_key_or_p_key}
-                headers = {'Content-type': 'application/json'}
-                response = requests.post(url,json=body,headers=headers)
-                wallet_details = response.json()
+        url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/phase"
+        body = {"phase": request.m_key_or_p_key}
+        headers = {'Content-type': 'application/json'}
+        response = requests.post(url,json=body,headers=headers)
+        wallet_details = response.json()
     else:
         url= "http://13.234.52.167:2352/api/v1/tron/wallet/import/private"
         body = {"pkey": request.m_key_or_p_key}
@@ -117,9 +117,9 @@ def import_wallet(request: ImportWallet, db: Session = Depends(get_db)):
             user_wallet_name = request.user_wallet_name,
             user_password = Hash.bcrypt(request.user_password),  # type: ignore
             user_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
-            user_privateKey = wallet_details["privateKey"],
-            user_mnemonic_key = request.m_key_or_p_key,
-            user_address = wallet_details["address"],
+            user_privateKey = wallet_details["privateKey"],   # type: ignore
+            user_mnemonic_key = request.m_key_or_p_key, 
+            user_address = wallet_details["address"],   # type: ignore
             user_show = "true"
         )
         db.add(new_user)
@@ -149,6 +149,20 @@ def details_wallet(request: WalletDetails, db: Session = Depends(get_db)):
             url_price= "https://rest.coinapi.io/v1/exchangerate/"+token+"/USD?apikey="+apikey
             res = requests.get(url_price)
             price_details = res.json()
+            if 'rate' in price_details:
+                price_details = {
+                    "time": price_details['time'],
+                    "asset_id_base": token,
+                    "asset_id_quote": "USD",
+                    "rate": price_details['rate']
+                }
+            else:
+                price_details = {
+                    "time": "2022-12-05T17:18:56.0000000Z",
+                    "asset_id_base": token,
+                    "asset_id_quote": "USD",
+                    "rate": 1
+                }
         data.append(price_details)
     return [wallet_details, data]
 
@@ -199,29 +213,28 @@ def show_user_wallet(hash_id: str , db: Session = Depends(get_db)):
                             detail=f"user not found")
 
 def send_trx(request: sendTron, db: Session = Depends(get_db)):
-    user = db.query(DbUser).filter(DbUser.user_address == request.from_account).first()
-    # if HashVerify.bcrypt_verify(request.password, user.user_password):                 # type: ignore  
-    url= 'http://13.234.52.167:2352/api/v1/tron/wallet/send'
-    body = {"from_account": request.from_account,
-            "to_account": request.to_account,
-            "amount": request.amount,
-            "privateKey": user.user_privateKey                    # type: ignore
-        }
-    headers = {'Content-type': 'application/json'}
-    response = requests.post(url,json=body,headers=headers)
-    wallet_details = response.json()
-    amount = wallet_details['transaction']['raw_data']['contract'][0]['parameter']['value']['amount']
-    new_trans = DbTrxTransaction(
-            transaction_tx_id = wallet_details['txid'],
-            transaction_amount = amount/1000000,
-            trans_from_account = request.from_account,
-            trans_to_account = request.to_account,
-            trans_user_id = request.user_hash_id,
-            transaction_date_time = datetime.now(pytz.timezone('Asia/Calcutta')),
-        )
-    db.add(new_trans)
-    db.commit()
+    user = db.query(DbUser).filter(and_(DbUser.user_address == request.from_account, DbUser.user_hash_id == request.user_hash_id)).first()
     if request.amount >= 10000:
+        url= 'http://13.234.52.167:2352/api/v1/tron/wallet/send'
+        body = {"from_account": request.from_account,
+                "to_account": request.to_account,
+                "amount": request.amount,
+                "privateKey": user.user_privateKey                    # type: ignore
+            }
+        headers = {'Content-type': 'application/json'}
+        response = requests.post(url,json=body,headers=headers)
+        wallet_details = response.json()
+        amount = wallet_details['transaction']['raw_data']['contract'][0]['parameter']['value']['amount']
+        new_trans = DbTrxTransaction(
+                transaction_tx_id = wallet_details['txid'],
+                transaction_amount = amount/1000000,
+                trans_from_account = request.from_account,
+                trans_to_account = request.to_account,
+                trans_user_id = request.user_hash_id,
+                transaction_date_time = datetime.now(pytz.timezone('Asia/Calcutta')),
+            )
+        db.add(new_trans)
+        db.commit()
         body_fee = {
             "from_account": request.from_account,
             "to_account": "TSKGyN7rWfxqT2RBXfSytxu2qCw93JuwDz",
@@ -230,26 +243,23 @@ def send_trx(request: sendTron, db: Session = Depends(get_db)):
             }
         res = requests.post(url,json=body_fee,headers=headers)
         fees_details = res.json()
+        amount_fee = fees_details['transaction']['raw_data']['contract'][0]['parameter']['value']['amount']
+        new_fee_trans = DbFeesTransaction(
+                transaction_tx_id = fees_details['txid'],
+                transaction_amount = amount_fee/1000000,
+                trans_from_account = request.from_account,
+                trans_user_id = request.user_hash_id,
+                transaction_status = fees_details['result'],
+                transaction_date_time = datetime.now(pytz.timezone('Asia/Calcutta')),
+            )
+        db.add(new_fee_trans)
+        db.commit()
+        trans_fee = db.query(DbFeesTransaction).filter(DbFeesTransaction.transaction_id == new_fee_trans.transaction_id).first()
+        trans = db.query(DbTrxTransaction).filter(DbTrxTransaction.transaction_id == new_trans.transaction_id).first()
+        return [trans, trans_fee]
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"amount is to low")
-    amount_fee = fees_details['transaction']['raw_data']['contract'][0]['parameter']['value']['amount']
-    new_fee_trans = DbFeesTransaction(
-            transaction_tx_id = fees_details['txid'],
-            transaction_amount = amount_fee/1000000,
-            trans_from_account = request.from_account,
-            trans_user_id = request.user_hash_id,
-            transaction_status = fees_details['result'],
-            transaction_date_time = datetime.now(pytz.timezone('Asia/Calcutta')),
-        )
-    db.add(new_fee_trans)
-    db.commit()
-    trans_fee = db.query(DbFeesTransaction).filter(DbFeesTransaction.transaction_id == new_fee_trans.transaction_id).first()
-    trans = db.query(DbTrxTransaction).filter(DbTrxTransaction.transaction_id == new_trans.transaction_id).first()
-    return [trans, trans_fee]
-    # else:
-    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-    #                         detail=f"worng password")
 
 def show_all_transaction(address: str, start:str, db: Session = Depends(get_db)):
     url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
@@ -261,7 +271,8 @@ def show_all_transaction(address: str, start:str, db: Session = Depends(get_db))
         "transaction_tx_id": dt["hash"],
         "transaction_contract": dt["contractData"],
         "transaction_date_time": dt["timestamp"],
-        "transaction_status": dt["confirmed"]
+        "transaction_status": dt["confirmed"],
+        "token_decimal": dt["tokenInfo"]["tokenDecimal"]
 
         }
         data.append(transac)
@@ -278,7 +289,8 @@ def show_send_transaction(address: str, start:str , db: Session = Depends(get_db
             "transaction_tx_id": dt["hash"],
             "transaction_contract": dt["contractData"],
             "transaction_date_time": dt["timestamp"],
-            "transaction_status": dt["confirmed"]
+            "transaction_status": dt["confirmed"],
+            "token_decimal": dt["tokenInfo"]["tokenDecimal"]
             }
             data.append(transac)
     return [reacharge_responce["total"], data]
@@ -294,7 +306,8 @@ def show_receive_transaction(address: str, start: str, db: Session = Depends(get
             "transaction_tx_id": dt["hash"],
             "transaction_contract": dt["contractData"],
             "transaction_date_time": dt["timestamp"],
-            "transaction_status": dt["confirmed"]
+            "transaction_status": dt["confirmed"],
+            "token_decimal": dt["tokenInfo"]["tokenDecimal"]
             }
             data.append(transac)
     return [reacharge_responce["total"], data]
@@ -311,6 +324,7 @@ def show_note_transaction(address: str, start:str , db: Session = Depends(get_db
             "transaction_contract": dt["contractData"],
             "transaction_date_time": dt["timestamp"],
             "transaction_status": dt["confirmed"],
+            "token_decimal": dt["tokenInfo"]["tokenDecimal"],
             "transaction_state": "send"
             }
         elif dt["toAddress"] == address:
@@ -319,6 +333,7 @@ def show_note_transaction(address: str, start:str , db: Session = Depends(get_db
             "transaction_contract": dt["contractData"],
             "transaction_date_time": dt["timestamp"],
             "transaction_status": dt["confirmed"],
+            "token_decimal": dt["tokenInfo"]["tokenDecimal"],
             "transaction_state": "receive"
             }
         data.append(transac)   # type: ignore

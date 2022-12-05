@@ -73,20 +73,37 @@ def show_token(db: Session = Depends(get_db)):
             url_price= "https://rest.coinapi.io/v1/exchangerate/"+tok+"/USD?apikey="+apikey
             res = requests.get(url_price)
             price_details = res.json()
-            token_details = {
-                "token_id": value.token_id,
-                "token_contect_id": value.token_contect_id,
-                "token_type": value.token_type,
-                "issuer_addr": value.issuer_addr,
-                "token_decimal": value.token_decimal,
-                "token_registration_date_time": value.token_registration_date_time,
-                "token_short_name": value.token_short_name,
-                "token_name": value.token_name,
-                "token_logo": value.token_logo,
-                "token_level": value.token_level,
-                "token_vip": value.token_vip,  
-                "token_can_show": value.token_can_show,  
-                "token_price": price_details['rate']
-            }
+            if 'rate' in price_details:
+                token_details = {
+                    "token_id": value.token_id,
+                    "token_contect_id": value.token_contect_id,
+                    "token_type": value.token_type,
+                    "issuer_addr": value.issuer_addr,
+                    "token_decimal": value.token_decimal,
+                    "token_registration_date_time": value.token_registration_date_time,
+                    "token_short_name": value.token_short_name,
+                    "token_name": value.token_name,
+                    "token_logo": value.token_logo,
+                    "token_level": value.token_level,
+                    "token_vip": value.token_vip,  
+                    "token_can_show": value.token_can_show,  
+                    "token_price": price_details['rate']
+                }
+            else:
+                token_details = {
+                    "token_id": value.token_id,
+                    "token_contect_id": value.token_contect_id,
+                    "token_type": value.token_type,
+                    "issuer_addr": value.issuer_addr,
+                    "token_decimal": value.token_decimal,
+                    "token_registration_date_time": value.token_registration_date_time,
+                    "token_short_name": value.token_short_name,
+                    "token_name": value.token_name,
+                    "token_logo": value.token_logo,
+                    "token_level": value.token_level,
+                    "token_vip": value.token_vip,  
+                    "token_can_show": value.token_can_show,  
+                    "token_price": 1
+                }
         data.append(token_details)
     return data               # type: ignore

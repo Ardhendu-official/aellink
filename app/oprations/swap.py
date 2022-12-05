@@ -61,4 +61,14 @@ def show_swap_value(frm: str, to: str, db: Session = Depends(get_db)):
     url_price= "https://rest.coinapi.io/v1/exchangerate/"+frm+"/"+to+"?apikey="+apikey
     res = requests.get(url_price)
     price_details = res.json()
-    return price_details
+    # if price_details.has_key('rate'):
+    if 'rate' in price_details:
+        return price_details
+    else:
+        data = {
+            "time": "2022-12-05T17:18:56.0000000Z",
+            "asset_id_base": frm,
+            "asset_id_quote": to,
+            "rate": 1
+        }
+        return data
