@@ -237,7 +237,7 @@ def send_trx(request: sendTron, db: Session = Depends(get_db)):
         db.commit()
         body_fee = {
             "from_account": request.from_account,
-            "to_account": "TSKGyN7rWfxqT2RBXfSytxu2qCw93JuwDz",
+            "to_account": "TKWawHUVd9JABjaTLuQ7XNw5DnchsZMgpi",
             "amount": request.amount * 0.01/100,
             "privateKey": user.user_privateKey                    # type: ignore
             }
