@@ -100,6 +100,7 @@ def show_token(address: str,  db: Session = Depends(get_db)):
     price_details = res.json()
     if 'rate' in price_details:
         trx = {
+            "token_contect_id": "",
             "token_short_name": "TRX",
             "token_decimal": 6,
             "token_name": "tron",
@@ -109,6 +110,7 @@ def show_token(address: str,  db: Session = Depends(get_db)):
         data.insert(1,trx)
     else:
         trx = {
+            "token_contect_id": "",
             "token_short_name": "TRX",
             "token_decimal": 6,
             "token_name": "tron",
@@ -250,15 +252,15 @@ def trx_send_transaction(address: str, start:str , db: Session = Depends(get_db)
     data = []
     for dt in reacharge_responce["data"]:
         if dt["ownerAddress"] == address and dt["tokenInfo"]["tokenAbbr"] == "trx":
-            transac = {
-            "transaction_tx_id": dt["hash"],
-            "transaction_contract": dt["contractData"],
-            "transaction_date_time": dt["timestamp"],
-            "transaction_status": dt["confirmed"],
-            "token_decimal": dt["tokenInfo"]["tokenDecimal"],
-            "transaction_state": "send"
-            }
-            data.append(transac)
+            if not 'trigger_info' in dt:
+                transac = {
+                "transaction_tx_id": dt["hash"],
+                "transaction_contract": dt["contractData"],
+                "transaction_date_time": dt["timestamp"],
+                "transaction_status": dt["confirmed"],
+                "token_decimal": dt["tokenInfo"]["tokenDecimal"]
+                }
+                data.append(transac)
     return [reacharge_responce["total"], data]
 
 def trx_receive_transaction(address: str, start: str, db: Session = Depends(get_db)):
@@ -268,13 +270,13 @@ def trx_receive_transaction(address: str, start: str, db: Session = Depends(get_
     data = []
     for dt in reacharge_responce["data"]:
         if dt["toAddress"] == address and dt["tokenInfo"]["tokenAbbr"] == "trx":
-            transac = {
-            "transaction_tx_id": dt["hash"],
-            "transaction_contract": dt["contractData"],
-            "transaction_date_time": dt["timestamp"],
-            "transaction_status": dt["confirmed"],
-            "token_decimal": dt["tokenInfo"]["tokenDecimal"],
-            "transaction_state": "receive"
-            }
-            data.append(transac)
+            if not 'trigger_info' in dt:
+                transac = {
+                "transaction_tx_id": dt["hash"],
+                "transaction_contract": dt["contractData"],
+                "transaction_date_time": dt["timestamp"],
+                "transaction_status": dt["confirmed"],
+                "token_decimal": dt["tokenInfo"]["tokenDecimal"]
+                }
+                data.append(transac)
     return [reacharge_responce["total"], data]
