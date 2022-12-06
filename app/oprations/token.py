@@ -107,3 +107,32 @@ def show_token(db: Session = Depends(get_db)):
                 }
         data.append(token_details)
     return data               # type: ignore
+
+def token_all_transaction(address: str, c_address: str, db: Session = Depends(get_db)):
+    url = 'https://api.trongrid.io/v1/accounts/'+address+'/transactions/trc20?limit=50&contract_address='+c_address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        data.append(dt)
+    return data
+
+def token_send_transaction(address: str, c_address:str , db: Session = Depends(get_db)):
+    url = 'https://api.trongrid.io/v1/accounts/'+address+'/transactions/trc20?limit=50&contract_address='+c_address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        if dt["from"] == address:
+            data.append(dt)
+    return data
+
+def token_receive_transaction(address: str, c_address: str, db: Session = Depends(get_db)):
+    url = 'https://api.trongrid.io/v1/accounts/'+address+'/transactions/trc20?limit=50&contract_address='+c_address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        if dt["to"] == address:
+            data.append(dt)
+    return data
