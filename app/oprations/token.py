@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
-from app.models.index import DbToken
+from app.models.index import DbToken, DbUser
 from app.schemas.index import Assets
 
 
@@ -46,67 +46,154 @@ def create_new_token(request: Assets, db: Session = Depends(get_db)):
     token = db.query(DbToken).filter(DbToken.token_id == new_token.token_id).first()
     return token
 
-def show_token(db: Session = Depends(get_db)):
-    token = db.query(DbToken).all()
+def create_user_token(request: Assets, db: Session = Depends(get_db)):
+    url = 'https://apilist.tronscan.org/api/contract?contract='+request.token_contect_id    # type: ignore
+    if not request.token_contect_id == "TM4q3gujYR7JUaFrZpM8x1P7NbQd6hwJts" and request.token_contect_id == "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t":
+        response = requests.get(url)  # type: ignore
+        data = response.json()
+        new_token = DbToken(
+            token_name = data["data"][0]['tokenInfo']["tokenName"],
+            token_short_name= data["data"][0]['tokenInfo']["tokenAbbr"],
+            token_contect_id = data["data"][0]['tokenInfo']["tokenId"],
+            token_logo = data["data"][0]['tokenInfo']["tokenLogo"],
+            token_type = data["data"][0]['tokenInfo']["tokenType"],
+            token_decimal = data["data"][0]['tokenInfo']["tokenDecimal"],
+            token_can_show = data["data"][0]['tokenInfo']["tokenCanShow"],
+            token_level = data["data"][0]['tokenInfo']["tokenLevel"],
+            issuer_addr = data["data"][0]['tokenInfo']["issuerAddr"],
+            token_vip = data["data"][0]['tokenInfo']["vip"],
+            token_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
+        )
+        db.add(new_token)
+        db.commit()
+        user = db.query(DbUser).filter(DbUser.user_address == request.address).first()
+        token = user.user_token_id+","+str(new_token.token_id)            # type: ignore
+        db.query(DbUser).filter(DbUser.user_address == request.address).update({"user_token_id": f'{token}'}, synchronize_session='evaluate')
+        db.commit()
+        token = db.query(DbToken).filter(DbToken.token_id == new_token.token_id).first()
+        return token
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"token already added")
+
+def show_token(address: str,  db: Session = Depends(get_db)):
+    user = db.query(DbUser).filter(DbUser.user_address == address).first()
     data = []
-    for value in token:                   # type: ignore
-        token_i = value.token_short_name
+    ael = {
+        "token_contect_id": "TM4q3gujYR7JUaFrZpM8x1P7NbQd6hwJts",
+        "token_type": "trc20",
+        "issuer_addr": "TKWawHUVd9JABjaTLuQ7XNw5DnchsZMgpi",
+        "token_decimal": 8,
+        "token_registration_date_time": "2022-11-22T18:28:03",
+        "token_short_name": "AEL",
+        "token_name": "AELINCE",
+        "token_logo": "https://static.tronscan.org/production/upload/logo/default.png",
+        "token_level": "0",
+        "token_vip": 0,
+        "token_can_show": 1,
+        "token_price": 2
+    }
+    data.insert(0,ael)
+    apikey="3968BDD4-E8D6-4FC0-BE69-8E9D06C558A1"
+    url_price= "https://rest.coinapi.io/v1/exchangerate/TRX/USD?apikey="+apikey
+    res = requests.get(url_price)
+    price_details = res.json()
+    if 'rate' in price_details:
+        trx = {
+            "token_short_name": "TRX",
+            "token_decimal": 6,
+            "token_name": "tron",
+            "token_logo": "https://static.tronscan.org/production/logo/trx.png",
+            "token_price": price_details['rate']
+        }
+        data.insert(1,trx)
+    else:
+        trx = {
+            "token_short_name": "TRX",
+            "token_decimal": 6,
+            "token_name": "tron",
+            "token_logo": "https://static.tronscan.org/production/logo/trx.png",
+            "token_price": 1
+        }
+        data.insert(1,trx)
+    url_price= "https://rest.coinapi.io/v1/exchangerate/USDT/USD?apikey="+apikey
+    res = requests.get(url_price)
+    price_details = res.json()
+    if 'rate' in price_details:
+        usdt = {
+        "token_id": 3,
+        "token_contect_id": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "token_type": "trc20",
+        "issuer_addr": "THPvaUhoh2Qn2y9THCZML3H815hhFhn5YC",
+        "token_decimal": 6,
+        "token_registration_date_time": "2022-11-22T18:27:43",
+        "token_short_name": "USDT",
+        "token_name": "Tether USD",
+        "token_logo": "https://static.tronscan.org/production/logo/usdtlogo.png",
+        "token_level": "2",
+        "token_vip": 1,
+        "token_can_show": 1,
+        "token_price": price_details['rate']
+    }
+        data.insert(2,usdt)
+    else:
+        usdt = {
+        "token_contect_id": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "token_type": "trc20",
+        "issuer_addr": "THPvaUhoh2Qn2y9THCZML3H815hhFhn5YC",
+        "token_decimal": 6,
+        "token_registration_date_time": "2022-11-22T18:27:43",
+        "token_short_name": "USDT",
+        "token_name": "Tether USD",
+        "token_logo": "https://static.tronscan.org/production/logo/usdtlogo.png",
+        "token_level": "2",
+        "token_vip": 1,
+        "token_can_show": 1,
+        "token_price": 1
+    }
+    data.insert(2,usdt)
+    for tkr in user.user_token_id.split(","):                   # type: ignore
+        token = db.query(DbToken).filter(DbToken.token_id == tkr).first()
+        token_i = token.token_short_name               # type: ignore
         tok = token_i.upper()
-        if tok == "AEL":
+        apikey="3968BDD4-E8D6-4FC0-BE69-8E9D06C558A1"
+        url_price= "https://rest.coinapi.io/v1/exchangerate/"+tok+"/USD?apikey="+apikey
+        res = requests.get(url_price)
+        price_details = res.json()
+        if 'rate' in price_details:
             token_details = {
-                "token_id": value.token_id,
-                "token_contect_id": value.token_contect_id,
-                "token_type": value.token_type,
-                "issuer_addr": value.issuer_addr,
-                "token_decimal": value.token_decimal,
-                "token_registration_date_time": value.token_registration_date_time,
-                "token_short_name": value.token_short_name,
-                "token_name": value.token_name,
-                "token_logo": value.token_logo,
-                "token_level": value.token_level,
-                "token_vip": value.token_vip,  
-                "token_can_show": value.token_can_show,  
-                "token_price": 2
+                "token_id": token.token_id,           # type: ignore
+                "token_contect_id": token.token_contect_id,            # type: ignore
+                "token_type": token.token_type,              # type: ignore
+                "issuer_addr": token.issuer_addr,          # type: ignore
+                "token_decimal": token.token_decimal,         # type: ignore
+                "token_registration_date_time": token.token_registration_date_time,     # type: ignore    
+                "token_short_name": token.token_short_name,                # type: ignore
+                "token_name": token.token_name,            # type: ignore
+                "token_logo": token.token_logo,          # type: ignore
+                "token_level": token.token_level,             # type: ignore
+                "token_vip": token.token_vip,                    # type: ignore
+                "token_can_show": token.token_can_show,           # type: ignore
+                "token_price": price_details['rate']
             }
         else:
-            apikey="3968BDD4-E8D6-4FC0-BE69-8E9D06C558A1"
-            url_price= "https://rest.coinapi.io/v1/exchangerate/"+tok+"/USD?apikey="+apikey
-            res = requests.get(url_price)
-            price_details = res.json()
-            if 'rate' in price_details:
-                token_details = {
-                    "token_id": value.token_id,
-                    "token_contect_id": value.token_contect_id,
-                    "token_type": value.token_type,
-                    "issuer_addr": value.issuer_addr,
-                    "token_decimal": value.token_decimal,
-                    "token_registration_date_time": value.token_registration_date_time,
-                    "token_short_name": value.token_short_name,
-                    "token_name": value.token_name,
-                    "token_logo": value.token_logo,
-                    "token_level": value.token_level,
-                    "token_vip": value.token_vip,  
-                    "token_can_show": value.token_can_show,  
-                    "token_price": price_details['rate']
-                }
-            else:
-                token_details = {
-                    "token_id": value.token_id,
-                    "token_contect_id": value.token_contect_id,
-                    "token_type": value.token_type,
-                    "issuer_addr": value.issuer_addr,
-                    "token_decimal": value.token_decimal,
-                    "token_registration_date_time": value.token_registration_date_time,
-                    "token_short_name": value.token_short_name,
-                    "token_name": value.token_name,
-                    "token_logo": value.token_logo,
-                    "token_level": value.token_level,
-                    "token_vip": value.token_vip,  
-                    "token_can_show": value.token_can_show,  
-                    "token_price": 1
-                }
+            token_details = {
+                "token_id": token.token_id,           # type: ignore
+                "token_contect_id": token.token_contect_id,            # type: ignore
+                "token_type": token.token_type,              # type: ignore
+                "issuer_addr": token.issuer_addr,          # type: ignore
+                "token_decimal": token.token_decimal,         # type: ignore
+                "token_registration_date_time": token.token_registration_date_time,     # type: ignore    
+                "token_short_name": token.token_short_name,                # type: ignore
+                "token_name": token.token_name,            # type: ignore
+                "token_logo": token.token_logo,          # type: ignore
+                "token_level": token.token_level,             # type: ignore
+                "token_vip": token.token_vip,                    # type: ignore
+                "token_can_show": token.token_can_show,           # type: ignore 
+                "token_price": 1
+            }
         data.append(token_details)
-    return data               # type: ignore
+    return data           # type: ignore
 
 def token_all_transaction(address: str, c_address: str, db: Session = Depends(get_db)):
     url = 'https://api.trongrid.io/v1/accounts/'+address+'/transactions/trc20?limit=50&contract_address='+c_address
@@ -136,3 +223,57 @@ def token_receive_transaction(address: str, c_address: str, db: Session = Depend
         if dt["to"] == address:
             data.append(dt)
     return data
+
+def trx_all_transaction(address: str, start:str, db: Session = Depends(get_db)):
+    url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        if dt["tokenInfo"]["tokenAbbr"] == "trx":
+            if not 'trigger_info' in dt:
+                transac = {
+                "transaction_tx_id": dt["hash"],
+                "transaction_contract": dt["contractData"],
+                "transaction_date_time": dt["timestamp"],
+                "transaction_status": dt["confirmed"],
+                "token_decimal": dt["tokenInfo"]["tokenDecimal"]
+                }
+                data.append(transac)
+    return [reacharge_responce["total"], data]
+
+def trx_send_transaction(address: str, start:str , db: Session = Depends(get_db)):
+    url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        if dt["ownerAddress"] == address and dt["tokenInfo"]["tokenAbbr"] == "trx":
+            transac = {
+            "transaction_tx_id": dt["hash"],
+            "transaction_contract": dt["contractData"],
+            "transaction_date_time": dt["timestamp"],
+            "transaction_status": dt["confirmed"],
+            "token_decimal": dt["tokenInfo"]["tokenDecimal"],
+            "transaction_state": "send"
+            }
+            data.append(transac)
+    return [reacharge_responce["total"], data]
+
+def trx_receive_transaction(address: str, start: str, db: Session = Depends(get_db)):
+    url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
+    response = requests.get(url)
+    reacharge_responce = response.json()
+    data = []
+    for dt in reacharge_responce["data"]:
+        if dt["toAddress"] == address and dt["tokenInfo"]["tokenAbbr"] == "trx":
+            transac = {
+            "transaction_tx_id": dt["hash"],
+            "transaction_contract": dt["contractData"],
+            "transaction_date_time": dt["timestamp"],
+            "transaction_status": dt["confirmed"],
+            "token_decimal": dt["tokenInfo"]["tokenDecimal"],
+            "transaction_state": "receive"
+            }
+            data.append(transac)
+    return [reacharge_responce["total"], data]

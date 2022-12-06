@@ -7,4 +7,4 @@ from pydantic import BaseModel
 
 class Assets(BaseModel):
     token_contect_id: str
-    hash_id: Optional[str] = None
+    address: Optional[str] = None
