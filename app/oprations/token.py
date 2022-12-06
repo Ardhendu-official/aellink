@@ -87,7 +87,7 @@ def show_token(address: str,  db: Session = Depends(get_db)):
         "token_registration_date_time": "2022-11-22T18:28:03",
         "token_short_name": "AEL",
         "token_name": "AELINCE",
-        "token_logo": "https://static.tronscan.org/production/upload/logo/default.png",
+        "token_logo": "https://bal-coin.vercel.app/assets/logo/ael_coin.png",
         "token_level": "0",
         "token_vip": 0,
         "token_can_show": 1,
@@ -102,6 +102,7 @@ def show_token(address: str,  db: Session = Depends(get_db)):
         trx = {
             "token_contect_id": "",
             "token_short_name": "TRX",
+            "token_type": "trc10",
             "token_decimal": 6,
             "token_name": "tron",
             "token_logo": "https://static.tronscan.org/production/logo/trx.png",
@@ -112,8 +113,9 @@ def show_token(address: str,  db: Session = Depends(get_db)):
         trx = {
             "token_contect_id": "",
             "token_short_name": "TRX",
+            "token_type": "trc10",
             "token_decimal": 6,
-            "token_name": "tron",
+            "token_name": "Tron",
             "token_logo": "https://static.tronscan.org/production/logo/trx.png",
             "token_price": 1
         }
