@@ -152,47 +152,48 @@ def show_token(address: str,  db: Session = Depends(get_db)):
         "token_price": 1
     }
     data.insert(2,usdt)
-    for tkr in user.user_token_id.split(","):                   # type: ignore
-        token = db.query(DbToken).filter(DbToken.token_id == tkr).first()
-        token_i = token.token_short_name               # type: ignore
-        tok = token_i.upper()
-        apikey="3968BDD4-E8D6-4FC0-BE69-8E9D06C558A1"
-        url_price= "https://rest.coinapi.io/v1/exchangerate/"+tok+"/USD?apikey="+apikey
-        res = requests.get(url_price)
-        price_details = res.json()
-        if 'rate' in price_details:
-            token_details = {
-                "token_id": token.token_id,           # type: ignore
-                "token_contect_id": token.token_contect_id,            # type: ignore
-                "token_type": token.token_type,              # type: ignore
-                "issuer_addr": token.issuer_addr,          # type: ignore
-                "token_decimal": token.token_decimal,         # type: ignore
-                "token_registration_date_time": token.token_registration_date_time,     # type: ignore    
-                "token_short_name": token.token_short_name,                # type: ignore
-                "token_name": token.token_name,            # type: ignore
-                "token_logo": token.token_logo,          # type: ignore
-                "token_level": token.token_level,             # type: ignore
-                "token_vip": token.token_vip,                    # type: ignore
-                "token_can_show": token.token_can_show,           # type: ignore
-                "token_price": price_details['rate']
-            }
-        else:
-            token_details = {
-                "token_id": token.token_id,           # type: ignore
-                "token_contect_id": token.token_contect_id,            # type: ignore
-                "token_type": token.token_type,              # type: ignore
-                "issuer_addr": token.issuer_addr,          # type: ignore
-                "token_decimal": token.token_decimal,         # type: ignore
-                "token_registration_date_time": token.token_registration_date_time,     # type: ignore    
-                "token_short_name": token.token_short_name,                # type: ignore
-                "token_name": token.token_name,            # type: ignore
-                "token_logo": token.token_logo,          # type: ignore
-                "token_level": token.token_level,             # type: ignore
-                "token_vip": token.token_vip,                    # type: ignore
-                "token_can_show": token.token_can_show,           # type: ignore 
-                "token_price": 1
-            }
-        data.append(token_details)
+    if user.user_token_id:           # type: ignore
+        for tkr in user.user_token_id.split(","):                   # type: ignore
+            token = db.query(DbToken).filter(DbToken.token_id == tkr).first()
+            token_i = token.token_short_name               # type: ignore
+            tok = token_i.upper()
+            apikey="3968BDD4-E8D6-4FC0-BE69-8E9D06C558A1"
+            url_price= "https://rest.coinapi.io/v1/exchangerate/"+tok+"/USD?apikey="+apikey
+            res = requests.get(url_price)
+            price_details = res.json()
+            if 'rate' in price_details:
+                token_details = {
+                    "token_id": token.token_id,           # type: ignore
+                    "token_contect_id": token.token_contect_id,            # type: ignore
+                    "token_type": token.token_type,              # type: ignore
+                    "issuer_addr": token.issuer_addr,          # type: ignore
+                    "token_decimal": token.token_decimal,         # type: ignore
+                    "token_registration_date_time": token.token_registration_date_time,     # type: ignore    
+                    "token_short_name": token.token_short_name,                # type: ignore
+                    "token_name": token.token_name,            # type: ignore
+                    "token_logo": token.token_logo,          # type: ignore
+                    "token_level": token.token_level,             # type: ignore
+                    "token_vip": token.token_vip,                    # type: ignore
+                    "token_can_show": token.token_can_show,           # type: ignore
+                    "token_price": price_details['rate']
+                }
+            else:
+                token_details = {
+                    "token_id": token.token_id,           # type: ignore
+                    "token_contect_id": token.token_contect_id,            # type: ignore
+                    "token_type": token.token_type,              # type: ignore
+                    "issuer_addr": token.issuer_addr,          # type: ignore
+                    "token_decimal": token.token_decimal,         # type: ignore
+                    "token_registration_date_time": token.token_registration_date_time,     # type: ignore    
+                    "token_short_name": token.token_short_name,                # type: ignore
+                    "token_name": token.token_name,            # type: ignore
+                    "token_logo": token.token_logo,          # type: ignore
+                    "token_level": token.token_level,             # type: ignore
+                    "token_vip": token.token_vip,                    # type: ignore
+                    "token_can_show": token.token_can_show,           # type: ignore 
+                    "token_price": 1
+                }
+            data.append(token_details)
     return data           # type: ignore
 
 def token_all_transaction(address: str, c_address: str, db: Session = Depends(get_db)):
