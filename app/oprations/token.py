@@ -67,7 +67,10 @@ def create_user_token(request: Assets, db: Session = Depends(get_db)):
         db.add(new_token)
         db.commit()
         user = db.query(DbUser).filter(DbUser.user_address == request.address).first()
-        token = user.user_token_id+","+str(new_token.token_id)            # type: ignore
+        if user.user_token_id == None:             # type: ignore
+            token = str(new_token.token_id)
+        else:
+            token = user.user_token_id+","+str(new_token.token_id)            # type: ignore
         db.query(DbUser).filter(DbUser.user_address == request.address).update({"user_token_id": f'{token}'}, synchronize_session='evaluate')
         db.commit()
         token = db.query(DbToken).filter(DbToken.token_id == new_token.token_id).first()
