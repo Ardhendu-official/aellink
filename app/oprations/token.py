@@ -47,8 +47,8 @@ def create_new_token(request: Assets, db: Session = Depends(get_db)):
     return token
 
 def create_user_token(request: Assets, db: Session = Depends(get_db)):
-    url = 'https://apilist.tronscan.org/api/contract?contract='+request.token_contect_id    # type: ignore
-    if not request.token_contect_id == "TM4q3gujYR7JUaFrZpM8x1P7NbQd6hwJts" and request.token_contect_id == "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t":
+    if not request.token_contect_id == "TM4q3gujYR7JUaFrZpM8x1P7NbQd6hwJts" and not request.token_contect_id == "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t":
+        url = 'https://apilist.tronscan.org/api/contract?contract='+request.token_contect_id    # type: ignore
         response = requests.get(url)  # type: ignore
         data = response.json()
         new_token = DbToken(
@@ -251,7 +251,7 @@ def trx_all_transaction(address: str, start:str, db: Session = Depends(get_db)):
                 "value": dt["contractData"]["amount"]
                 }
                 data.append(transac)
-    return [reacharge_responce["total"], data]
+    return data
 
 def trx_send_transaction(address: str, start:str , db: Session = Depends(get_db)):
     url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
@@ -276,7 +276,7 @@ def trx_send_transaction(address: str, start:str , db: Session = Depends(get_db)
                 "value": dt["contractData"]["amount"]
                 }
                 data.append(transac)
-    return [reacharge_responce["total"], data]
+    return data
 
 def trx_receive_transaction(address: str, start: str, db: Session = Depends(get_db)):
     url = 'https://apilist.tronscan.org/api/transaction?sort=-timestamp&count=true&limit=50&start='+start+'&address='+address
@@ -301,4 +301,4 @@ def trx_receive_transaction(address: str, start: str, db: Session = Depends(get_
                 "value": dt["contractData"]["amount"]
                 }
                 data.append(transac)
-    return [reacharge_responce["total"], data]
+    return data
