@@ -125,37 +125,36 @@ def show_token(address: str,  db: Session = Depends(get_db)):
     price_details = res.json()
     if 'rate' in price_details:
         usdt = {
-        "token_id": 3,
-        "token_contect_id": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-        "token_type": "trc20",
-        "issuer_addr": "THPvaUhoh2Qn2y9THCZML3H815hhFhn5YC",
-        "token_decimal": 6,
-        "token_registration_date_time": "2022-11-22T18:27:43",
-        "token_short_name": "USDT",
-        "token_name": "Tether USD",
-        "token_logo": "https://static.tronscan.org/production/logo/usdtlogo.png",
-        "token_level": "2",
-        "token_vip": 1,
-        "token_can_show": 1,
-        "token_price": price_details['rate']
-    }
+            "token_contect_id": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+            "token_type": "trc20",
+            "issuer_addr": "THPvaUhoh2Qn2y9THCZML3H815hhFhn5YC",
+            "token_decimal": 6,
+            "token_registration_date_time": "2022-11-22T18:27:43",
+            "token_short_name": "USDT",
+            "token_name": "Tether USD",
+            "token_logo": "https://static.tronscan.org/production/logo/usdtlogo.png",
+            "token_level": "2",
+            "token_vip": 1,
+            "token_can_show": 1,
+            "token_price": price_details['rate']
+        }
         data.insert(2,usdt)
     else:
         usdt = {
-        "token_contect_id": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-        "token_type": "trc20",
-        "issuer_addr": "THPvaUhoh2Qn2y9THCZML3H815hhFhn5YC",
-        "token_decimal": 6,
-        "token_registration_date_time": "2022-11-22T18:27:43",
-        "token_short_name": "USDT",
-        "token_name": "Tether USD",
-        "token_logo": "https://static.tronscan.org/production/logo/usdtlogo.png",
-        "token_level": "2",
-        "token_vip": 1,
-        "token_can_show": 1,
-        "token_price": 1
-    }
-    data.insert(2,usdt)
+            "token_contect_id": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+            "token_type": "trc20",
+            "issuer_addr": "THPvaUhoh2Qn2y9THCZML3H815hhFhn5YC",
+            "token_decimal": 6,
+            "token_registration_date_time": "2022-11-22T18:27:43",
+            "token_short_name": "USDT",
+            "token_name": "Tether USD",
+            "token_logo": "https://static.tronscan.org/production/logo/usdtlogo.png",
+            "token_level": "2",
+            "token_vip": 1,
+            "token_can_show": 1,
+            "token_price": 1
+        }
+        data.insert(2,usdt)
     if user.user_token_id:           # type: ignore
         for tkr in user.user_token_id.split(","):                   # type: ignore
             token = db.query(DbToken).filter(DbToken.token_id == tkr).first()
@@ -238,11 +237,18 @@ def trx_all_transaction(address: str, start:str, db: Session = Depends(get_db)):
         if dt["tokenInfo"]["tokenAbbr"] == "trx":
             if not 'trigger_info' in dt:
                 transac = {
-                "transaction_tx_id": dt["hash"],
-                "transaction_contract": dt["contractData"],
-                "transaction_date_time": dt["timestamp"],
-                "transaction_status": dt["confirmed"],
-                "token_decimal": dt["tokenInfo"]["tokenDecimal"]
+                "transaction_id": dt["hash"],
+                "token_info": {
+                "symbol": "TRX",
+                "address": "",
+                "decimals": dt["tokenInfo"]["tokenDecimal"],
+                "name": "Tron"
+                },
+                "block_timestamp": dt["timestamp"],
+                "from": dt["contractData"]["owner_address"],
+                "to": dt["contractData"]["to_address"],
+                "type": "Transfer",
+                "value": dt["contractData"]["amount"]
                 }
                 data.append(transac)
     return [reacharge_responce["total"], data]
@@ -255,12 +261,19 @@ def trx_send_transaction(address: str, start:str , db: Session = Depends(get_db)
     for dt in reacharge_responce["data"]:
         if dt["ownerAddress"] == address and dt["tokenInfo"]["tokenAbbr"] == "trx":
             if not 'trigger_info' in dt:
-                transac = {
-                "transaction_tx_id": dt["hash"],
-                "transaction_contract": dt["contractData"],
-                "transaction_date_time": dt["timestamp"],
-                "transaction_status": dt["confirmed"],
-                "token_decimal": dt["tokenInfo"]["tokenDecimal"]
+                transac = transac = {
+                "transaction_id": dt["hash"],
+                "token_info": {
+                "symbol": "TRX",
+                "address": "",
+                "decimals": dt["tokenInfo"]["tokenDecimal"],
+                "name": "Tron"
+                },
+                "block_timestamp": dt["timestamp"],
+                "from": dt["contractData"]["owner_address"],
+                "to": dt["contractData"]["to_address"],
+                "type": "Transfer",
+                "value": dt["contractData"]["amount"]
                 }
                 data.append(transac)
     return [reacharge_responce["total"], data]
@@ -273,12 +286,19 @@ def trx_receive_transaction(address: str, start: str, db: Session = Depends(get_
     for dt in reacharge_responce["data"]:
         if dt["toAddress"] == address and dt["tokenInfo"]["tokenAbbr"] == "trx":
             if not 'trigger_info' in dt:
-                transac = {
-                "transaction_tx_id": dt["hash"],
-                "transaction_contract": dt["contractData"],
-                "transaction_date_time": dt["timestamp"],
-                "transaction_status": dt["confirmed"],
-                "token_decimal": dt["tokenInfo"]["tokenDecimal"]
+                transac = transac = {
+                "transaction_id": dt["hash"],
+                "token_info": {
+                "symbol": "TRX",
+                "address": "",
+                "decimals": dt["tokenInfo"]["tokenDecimal"],
+                "name": "Tron"
+                },
+                "block_timestamp": dt["timestamp"],
+                "from": dt["contractData"]["owner_address"],
+                "to": dt["contractData"]["to_address"],
+                "type": "Transfer",
+                "value": dt["contractData"]["amount"]
                 }
                 data.append(transac)
     return [reacharge_responce["total"], data]
