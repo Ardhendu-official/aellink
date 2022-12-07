@@ -239,16 +239,16 @@ def trx_all_transaction(address: str, start:str, db: Session = Depends(get_db)):
                 transac = {
                 "transaction_id": dt["hash"],
                 "token_info": {
-                "symbol": "TRX",
-                "address": "",
-                "decimals": dt["tokenInfo"]["tokenDecimal"],
-                "name": "Tron"
+                    "symbol": "TRX",
+                    "address": "",
+                    "decimals": dt["tokenInfo"]["tokenDecimal"],
+                    "name": "Tron"
                 },
                 "block_timestamp": dt["timestamp"],
                 "from": dt["contractData"]["owner_address"],
                 "to": dt["contractData"]["to_address"],
                 "type": "Transfer",
-                "value": dt["contractData"]["amount"]
+                "value": str(dt["contractData"]["amount"])
                 }
                 data.append(transac)
     return data
@@ -273,7 +273,7 @@ def trx_send_transaction(address: str, start:str , db: Session = Depends(get_db)
                 "from": dt["contractData"]["owner_address"],
                 "to": dt["contractData"]["to_address"],
                 "type": "Transfer",
-                "value": dt["contractData"]["amount"]
+                "value": str(dt["contractData"]["amount"])
                 }
                 data.append(transac)
     return data
@@ -298,7 +298,7 @@ def trx_receive_transaction(address: str, start: str, db: Session = Depends(get_
                 "from": dt["contractData"]["owner_address"],
                 "to": dt["contractData"]["to_address"],
                 "type": "Transfer",
-                "value": dt["contractData"]["amount"]
+                "value": str(dt["contractData"]["amount"])
                 }
                 data.append(transac)
     return data
