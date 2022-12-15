@@ -13,7 +13,7 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.models.index import DbToken
-from app.schemas.index import Assets
+from app.schemas.index import Estimated
 
 
 def get_db():
@@ -25,50 +25,58 @@ def get_db():
 
 
 def show_swap_pair(asset: str, db: Session = Depends(get_db)):
-    url = 'https://list.justswap.link/justswap.json'
-    response = requests.get(url)
+    url = 'http://13.234.52.167:2352/api/v1/swap/pair/'
+    body = {"name": asset}
+    headers = {'Content-type': 'application/json'}
+    response = requests.get(url, json=body, headers=headers)
     res = response.json()
-    trx = {
-      "symbol": "TRX",
-      "decimals": 6,
-      "name": "tron",
-      "logoURI": "https://static.tronscan.org/production/logo/trx.png"
-    }
-    data = res["tokens"]
-    data.insert(0,trx)
-    ass = []
-    for index, tok in enumerate(data):
-        if data[index]["symbol"] == asset:
-                data.pop(index)
-    return data
+    return res
 
-def show_swap_list(db: Session = Depends(get_db)):
-    url = 'https://list.justswap.link/justswap.json'
-    response = requests.get(url)
+def show_swap_curency(asset: str, db: Session = Depends(get_db)):
+    url = 'http://13.234.52.167:2352/api/v1/swap/curency/'
+    body = {"name": asset}
+    headers = {'Content-type': 'application/json'}
+    response = requests.get(url, json=body, headers=headers)
     res = response.json()
-    trx = {
-      "symbol": "TRX",
-      "decimals": 6,
-      "name": "tron",
-      "logoURI": "https://static.tronscan.org/production/logo/trx.png"
-    }
-    data = res["tokens"]
-    data.insert(0,trx)
-    return data
+    return res
 
-def show_swap_value(frm: str, to: str, db: Session = Depends(get_db)):
-    apikey="3968BDD4-E8D6-4FC0-BE69-8E9D06C558A1"
-    url_price= "https://rest.coinapi.io/v1/exchangerate/"+frm+"/"+to+"?apikey="+apikey
-    res = requests.get(url_price)
-    price_details = res.json()
-    # if price_details.has_key('rate'):
-    if 'rate' in price_details:
-        return price_details
-    else:
-        data = {
-            "time": "2022-12-05T17:18:56.0000000Z",
-            "asset_id_base": frm,
-            "asset_id_quote": to,
-            "rate": 1
-        }
-        return data
+def show_swap_curency_all(db: Session = Depends(get_db)):
+    url = 'http://13.234.52.167:2352/api/v1/swap/curency/all/'
+    headers = {'Content-type': 'application/json'}
+    response = requests.get(url, headers=headers)
+    res = response.json()
+    return res
+
+def show_swap_estimated(currency_from: str, currency_to: str, amount:str, db: Session = Depends(get_db)):
+    url = 'http://13.234.52.167:2352/api/v1/swap/estimated/'
+    body = {
+        "currency_from": currency_from,
+        "currency_to": currency_to,
+        "amount": amount
+    }
+    headers = {'Content-type': 'application/json'}
+    response = requests.get(url, json=body, headers=headers)
+    res = response.json()
+    return res
+
+def show_swap_minimal(currency_from: str, currency_to: str, db: Session = Depends(get_db)):
+    url = 'http://13.234.52.167:2352/api/v1/swap/minimal/'
+    body = {
+        "currency_from": currency_from,
+        "currency_to": currency_to
+    }
+    headers = {'Content-type': 'application/json'}
+    response = requests.get(url, json=body, headers=headers)
+    res = response.json()
+    return res
+
+def show_swap_range(currency_from: str, currency_to: str, db: Session = Depends(get_db)):
+    url = 'http://13.234.52.167:2352/api/v1/swap/range/'
+    body = {
+        "currency_from": currency_from,
+        "currency_to": currency_to
+    }
+    headers = {'Content-type': 'application/json'}
+    response = requests.get(url, json=body, headers=headers)
+    res = response.json()
+    return res
