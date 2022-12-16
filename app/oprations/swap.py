@@ -30,7 +30,41 @@ def show_swap_pair(asset: str, db: Session = Depends(get_db)):
     headers = {'Content-type': 'application/json'}
     response = requests.get(url, json=body, headers=headers)
     res = response.json()
-    return res
+    acc = []
+    for data in res[:7]:
+        url = 'https://api.stealthex.io/api/v2/currency/'+data+'?api_key=61ade498-2c74-48fd-b737-4beebf69dbb9'
+        response1 = requests.get(url)
+        res1 = response1.json()
+        acc.append(res1)
+    return acc
+
+def show_swap_trx(db: Session = Depends(get_db)):
+    url = 'http://13.234.52.167:2352/api/v1/swap/pair/'
+    body = {"name": "trx"}
+    headers = {'Content-type': 'application/json'}
+    response = requests.get(url, json=body, headers=headers)
+    res = response.json()
+    acc = []
+    for data in res[:7]:
+        url = 'https://api.stealthex.io/api/v2/currency/'+data+'?api_key=61ade498-2c74-48fd-b737-4beebf69dbb9'
+        response1 = requests.get(url)
+        res1 = response1.json()
+        acc.append(res1)
+    return acc
+
+def show_swap_usdt(db: Session = Depends(get_db)):
+    url = 'http://13.234.52.167:2352/api/v1/swap/pair/'
+    body = {"name": "usdttrc20"}
+    headers = {'Content-type': 'application/json'}
+    response = requests.get(url, json=body, headers=headers)
+    res = response.json()
+    acc = []
+    for data in res[:7]:
+        url = 'https://api.stealthex.io/api/v2/currency/'+data+'?api_key=61ade498-2c74-48fd-b737-4beebf69dbb9'
+        response1 = requests.get(url)
+        res1 = response1.json()
+        acc.append(res1)
+    return acc
 
 def show_swap_curency(asset: str, db: Session = Depends(get_db)):
     url = 'http://13.234.52.167:2352/api/v1/swap/curency/'
