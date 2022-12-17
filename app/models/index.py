@@ -1,3 +1,4 @@
+from app.models.app import DbApps
 from app.models.banner import DbBanner
 from app.models.fees_transaction import DbFeesTransaction
 from app.models.token import DbToken
