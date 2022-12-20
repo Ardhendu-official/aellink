@@ -94,8 +94,14 @@ def show_swap_estimated(currency_from: str, currency_to: str, amount:str, db: Se
     res = response.json()
     return res
 
-def show_swap_minimal(currency_from: str, currency_to: str, db: Session = Depends(get_db)):
+def show_swap_minimal(currency_from: str, currency_to: str, amount:str, db: Session = Depends(get_db)):
     url = 'http://13.234.52.167:2352/api/v1/swap/minimal/'
+    url_1 = 'http://13.234.52.167:2352/api/v1/swap/estimated/'
+    body_1 = {
+        "currency_from": currency_from,
+        "currency_to": currency_to,
+        "amount": amount
+    }
     body = {
         "currency_from": currency_from,
         "currency_to": currency_to
@@ -103,7 +109,10 @@ def show_swap_minimal(currency_from: str, currency_to: str, db: Session = Depend
     headers = {'Content-type': 'application/json'}
     response = requests.get(url, json=body, headers=headers)
     res = response.json()
-    return res
+    
+    response_1 = requests.get(url_1, json=body_1, headers=headers)
+    res_1 = response_1.json()
+    return [res, res_1]
 
 def show_swap_range(currency_from: str, currency_to: str, db: Session = Depends(get_db)):
     url = 'http://13.234.52.167:2352/api/v1/swap/range/'

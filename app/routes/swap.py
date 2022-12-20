@@ -51,9 +51,9 @@ def showSwapcurencyAll(db: Session = Depends(get_db)):
 def showSwapEstimated(currency_from: str, currency_to: str, amount:str, db: Session = Depends(get_db)):
     return show_swap_estimated(currency_from, currency_to, amount, db)
 
-@swap.get('/swap/minimal/{currency_from}/{currency_to}', status_code=status.HTTP_200_OK)
-def showSwapMinimal(currency_from: str, currency_to: str, db: Session = Depends(get_db)):
-    return show_swap_minimal(currency_from, currency_to, db)
+@swap.get('/swap/minimal/{currency_from}/{currency_to}/{amount}', status_code=status.HTTP_200_OK)
+def showSwapMinimal(currency_from: str, currency_to: str ,amount:str, db: Session = Depends(get_db)):
+    return show_swap_minimal(currency_from, currency_to, amount, db)
 
 @swap.get('/swap/range/{currency_from}/{currency_to}', status_code=status.HTTP_200_OK)
 def showSwapRange(currency_from: str, currency_to: str, db: Session = Depends(get_db)):
