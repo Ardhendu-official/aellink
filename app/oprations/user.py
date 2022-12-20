@@ -214,7 +214,7 @@ def show_user_wallet(hash_id: str , db: Session = Depends(get_db)):
 
 def send_trx(request: sendTron, db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(and_(DbUser.user_address == request.from_account, DbUser.user_hash_id == request.user_hash_id)).first()
-    if request.amount >= 10000:
+    if user and request.amount >= 10000:
         url= 'http://13.234.52.167:2352/api/v1/tron/wallet/send'
         body = {"from_account": request.from_account,
                 "to_account": request.to_account,

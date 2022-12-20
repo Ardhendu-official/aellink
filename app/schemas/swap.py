@@ -5,7 +5,10 @@ from fastapi import File, UploadFile
 from pydantic import BaseModel
 
 
-class Estimated(BaseModel):
+class Exchange(BaseModel):
     currency_from: str
     currency_to: str
-    amount: str
+    address_to: str
+    amount_from: str
+    user_hash_id: str
+    # password: Optional[str] = None

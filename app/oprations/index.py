@@ -1,9 +1,10 @@
 from app.oprations.apps import show_app
 from app.oprations.banner import create_new_banner, show_banner
-from app.oprations.swap import (show_swap_curency, show_swap_curency_all,
-                                show_swap_estimated, show_swap_minimal,
-                                show_swap_pair, show_swap_range, show_swap_trx,
-                                show_swap_usdt)
+from app.oprations.swap import (create_swap, show_swap_curency,
+                                show_swap_curency_all, show_swap_estimated,
+                                show_swap_minimal, show_swap_pair,
+                                show_swap_range, show_swap_trans,
+                                show_swap_trx, show_swap_usdt)
 from app.oprations.token import (create_new_token, create_user_token,
                                  show_token, token_all_transaction,
                                  token_receive_transaction,

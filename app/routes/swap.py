@@ -9,11 +9,12 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.models.index import DbToken
-from app.oprations.index import (show_swap_curency, show_swap_curency_all,
-                                 show_swap_estimated, show_swap_minimal,
-                                 show_swap_pair, show_swap_range,
+from app.oprations.index import (create_swap, show_swap_curency,
+                                 show_swap_curency_all, show_swap_estimated,
+                                 show_swap_minimal, show_swap_pair,
+                                 show_swap_range, show_swap_trans,
                                  show_swap_trx, show_swap_usdt)
-from app.schemas.index import Estimated
+from app.schemas.index import Exchange
 
 swap = APIRouter()
 
@@ -57,3 +58,11 @@ def showSwapMinimal(currency_from: str, currency_to: str, db: Session = Depends(
 @swap.get('/swap/range/{currency_from}/{currency_to}', status_code=status.HTTP_200_OK)
 def showSwapRange(currency_from: str, currency_to: str, db: Session = Depends(get_db)):
     return show_swap_range(currency_from, currency_to, db)
+
+@swap.post('/swap/create', status_code=status.HTTP_200_OK)
+def CreateSwap(request: Exchange, db: Session = Depends(get_db)):
+    return create_swap(request, db)
+
+@swap.get('/swap/trans/{user_hash_id}/{user_address}', status_code=status.HTTP_200_OK)
+def showSwapTrans(user_hash_id: str, user_address: str, db: Session = Depends(get_db)):
+    return show_swap_trans(user_hash_id, user_address, db)
