@@ -109,10 +109,15 @@ def show_swap_minimal(currency_from: str, currency_to: str, amount:str, db: Sess
     headers = {'Content-type': 'application/json'}
     response = requests.get(url, json=body, headers=headers)
     res = response.json()
-    
+
     response_1 = requests.get(url_1, json=body_1, headers=headers)
     res_1 = response_1.json()
-    return [res, res_1]
+    data = {
+        "min_amount": res["min_amount"],
+        "estimated_amount": res_1["estimated_amount"]
+    }
+
+    return data
 
 def show_swap_range(currency_from: str, currency_to: str, db: Session = Depends(get_db)):
     url = 'http://13.234.52.167:2352/api/v1/swap/range/'
