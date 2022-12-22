@@ -12,8 +12,8 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.functions.index import Hash, HashVerify
-from app.models.index import (DbFeesTransaction, DbToken, DbTrxTransaction,
-                              DbUser)
+from app.models.index import (DbAdmin, DbFeesTransaction, DbToken,
+                              DbTrxTransaction, DbUser)
 from app.schemas.index import (ImportWallet, User, WalletDetails, deleteWallet,
                                liveprice, passChange, passVarify, sendTron,
                                updateWallet)
@@ -253,6 +253,10 @@ def send_trx(request: sendTron, db: Session = Depends(get_db)):
                 transaction_date_time = datetime.now(pytz.timezone('Asia/Calcutta')),
             )
         db.add(new_fee_trans)
+        db.commit()
+        amo = db.query(DbAdmin).first()
+        amo_amount = amo.admin_comission + amount_fee/1000000                     # type: ignore
+        db.query(DbAdmin).update({"admin_comission": f'{amo_amount}'}, synchronize_session='evaluate')
         db.commit()
         trans_fee = db.query(DbFeesTransaction).filter(DbFeesTransaction.transaction_id == new_fee_trans.transaction_id).first()
         trans = db.query(DbTrxTransaction).filter(DbTrxTransaction.transaction_id == new_trans.transaction_id).first()

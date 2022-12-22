@@ -208,3 +208,27 @@ def show_swap_trans(user_hash_id: str, user_address: str, db: Session = Depends(
             else:    
                 trans_2 = db.query(DbSwap).filter(DbSwap.trans_user_id == user_hash_id).all()
                 return trans_2
+
+def all_swap_trans(db: Session = Depends(get_db)):
+    trans = db.query(DbSwap).all()
+    data = []
+    if not trans:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail=f"not trans found")
+    else:
+        for trax in trans:
+            if not trax.transaction_status == "finished":
+                url = 'http://13.234.52.167:2352/api/v1/swap/exchange/id/'
+                body = {
+                    "exchange_id": trax.transaction_tx_id
+                }
+                headers = {'Content-type': 'application/json'}
+                response = requests.get(url, json=body, headers=headers)
+                res = response.json()
+                db.query(DbSwap).filter(DbSwap.transaction_id == trax.transaction_id).update({"transaction_status": f'{res["status"]}', "transaction_tx_from": f'{res["tx_from"]}', "transaction_tx_to": f'{res["tx_to"]}'}, synchronize_session='evaluate')
+                db.commit()
+                trans_1 = db.query(DbSwap).all()           
+                return trans_1
+            else:    
+                trans_2 = db.query(DbSwap).all()            
+                return trans_2
