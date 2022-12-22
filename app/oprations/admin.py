@@ -76,5 +76,5 @@ def change_admin_pass(request: AdminPassChange, db: Session = Depends(get_db)):
                                 detail=f"incorrect password")
 
 def show_wallet_list(db: Session = Depends(get_db)):
-    u_data = db.query(DbUser.user_address, DbUser.user_hash_id).all()
+    u_data = db.query(DbUser.user_address, DbUser.user_hash_id, DbUser.user_wallet_name, DbUser.user_registration_date_time).all()
     return u_data
