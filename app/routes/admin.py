@@ -5,7 +5,7 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.oprations.index import (change_admin_pass, create_admin, login_admin,
-                                 show_admin, show_wallet_list)
+                                 show_admin, show_all_trans, show_wallet_list)
 from app.schemas.index import Admin, AdminLogin, AdminPassChange
 
 admin = APIRouter()
@@ -37,3 +37,7 @@ def loginAdmin(request: AdminLogin, db: Session = Depends(get_db)):
 @admin.post('/admin/change/pass', status_code=status.HTTP_202_ACCEPTED)
 def changePass(request: AdminPassChange, db: Session = Depends(get_db)):  
     return change_admin_pass(request, db)
+
+@admin.get('/trans/all', status_code=status.HTTP_200_OK)
+def transactionAll(db: Session = Depends(get_db)):
+    return show_all_trans(db) 
