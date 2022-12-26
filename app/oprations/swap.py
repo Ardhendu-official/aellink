@@ -227,8 +227,8 @@ def all_swap_trans(db: Session = Depends(get_db)):
                 res = response.json()
                 db.query(DbSwap).filter(DbSwap.transaction_id == trax.transaction_id).update({"transaction_status": f'{res["status"]}', "transaction_tx_from": f'{res["tx_from"]}', "transaction_tx_to": f'{res["tx_to"]}'}, synchronize_session='evaluate')
                 db.commit()
-                trans_1 = db.query(DbSwap).all()           
+                trans_1 = db.query(DbSwap).order_by(DbSwap.transaction_id.desc()).all()           
                 return trans_1
             else:    
-                trans_2 = db.query(DbSwap).all()            
+                trans_2 = db.query(DbSwap).order_by(DbSwap.transaction_id.desc()).all()            
                 return trans_2

@@ -38,3 +38,7 @@ def create_new_banner(request: Banner, db: Session = Depends(get_db)):
 def show_banner(db: Session = Depends(get_db)):
     banner = db.query(DbBanner).all()
     return banner
+
+def banner_search(search: str, db: Session = Depends(get_db)):
+    banner = db.query(DbBanner).filter(DbBanner.name.like(f"%{search}%", escape="/")).all()
+    return banner

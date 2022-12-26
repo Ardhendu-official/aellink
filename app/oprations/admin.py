@@ -76,9 +76,9 @@ def change_admin_pass(request: AdminPassChange, db: Session = Depends(get_db)):
                                 detail=f"incorrect password")
 
 def show_wallet_list(db: Session = Depends(get_db)):
-    u_data = db.query(DbUser.user_address, DbUser.user_hash_id, DbUser.user_wallet_name, DbUser.user_registration_date_time).all()
+    u_data = db.query(DbUser.user_address, DbUser.user_hash_id, DbUser.user_wallet_name, DbUser.user_registration_date_time).order_by(DbUser.user_id.desc()).all()
     return u_data
 
 def show_all_trans(db: Session = Depends(get_db)):
-    t_data = db.query(DbTrxTransaction).all()
+    t_data = db.query(DbTrxTransaction).order_by(DbTrxTransaction.transaction_id.desc()).all()
     return t_data

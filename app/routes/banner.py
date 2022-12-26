@@ -9,7 +9,7 @@ from sqlalchemy.orm.session import Session
 
 from app.config.database import SessionLocal, engine
 from app.models.index import DbToken
-from app.oprations.index import create_new_banner, show_banner
+from app.oprations.index import banner_search, create_new_banner, show_banner
 from app.schemas.index import Assets, Banner
 
 banner = APIRouter()
@@ -30,3 +30,7 @@ def createBanner(request: Banner, db: Session = Depends(get_db)):
 @banner.get('/banner/show', status_code=status.HTTP_200_OK)
 def showBanner(db: Session = Depends(get_db)):
     return show_banner(db)  
+
+@banner.get('/banner/search/{search}', status_code=status.HTTP_200_OK)
+def searchBanner(search: str, db: Session = Depends(get_db)):
+    return banner_search(search, db)  
