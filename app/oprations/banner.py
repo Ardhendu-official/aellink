@@ -23,7 +23,7 @@ def get_db():
     finally:
         db.close()
 
-def create_new_banner(request: Banner, db: Session = Depends(get_db)):
+def create_new_banner(request: Banner, db: Session = Depends(get_db)):       # type: ignore   
     new_banner = DbBanner(
         name = request.name,
         Subtitle = request.Subtitle,

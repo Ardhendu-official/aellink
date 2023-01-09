@@ -2,6 +2,7 @@ from app.oprations.admin import (change_admin_pass, create_admin, login_admin,
                                  show_admin, show_all_trans, show_wallet_list)
 from app.oprations.apps import show_app
 from app.oprations.banner import banner_search, create_new_banner, show_banner
+from app.oprations.history import create_new_history, show_history
 from app.oprations.swap import (all_swap_trans, create_swap, show_swap_curency,
                                 show_swap_curency_all, show_swap_estimated,
                                 show_swap_minimal, show_swap_pair,
